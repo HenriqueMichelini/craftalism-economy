@@ -1,6 +1,6 @@
-package io.github.HenriqueMichelini.craftalism_economy.infra.config;
+package io.github.HenriqueMichelini.craftalism.economy.infra.config;
 
-import io.github.HenriqueMichelini.craftalism_economy.CraftalismEconomy;
+import io.github.HenriqueMichelini.craftalism.economy.CraftalismEconomy;
 
 import java.util.Locale;
 

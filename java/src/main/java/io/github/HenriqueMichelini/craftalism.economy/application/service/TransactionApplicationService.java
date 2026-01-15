@@ -1,11 +1,11 @@
-package io.github.HenriqueMichelini.craftalism_economy.application.service;
+package io.github.HenriqueMichelini.craftalism.economy.application.service;
 
-import io.github.HenriqueMichelini.craftalism_economy.domain.model.Transaction;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.dto.TransactionResponseDTO;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.RateLimitException;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.TransactionApiService;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.BadRequestException;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.NotFoundException;
+import io.github.HenriqueMichelini.craftalism.economy.domain.model.Transaction;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.TransactionResponseDTO;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.RateLimitException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.TransactionApiService;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.BadRequestException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
 
 import java.util.Optional;
 import java.util.UUID;

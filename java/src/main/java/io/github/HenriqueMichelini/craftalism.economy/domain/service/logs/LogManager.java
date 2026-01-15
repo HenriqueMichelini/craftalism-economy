@@ -1,4 +1,4 @@
-package io.github.HenriqueMichelini.craftalism_economy.domain.service.logs;
+package io.github.HenriqueMichelini.craftalism.economy.domain.service.logs;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;

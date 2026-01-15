@@ -1,13 +1,13 @@
-package io.github.HenriqueMichelini.craftalism_economy.application.service;
+package io.github.HenriqueMichelini.craftalism.economy.application.service;
 
-import io.github.HenriqueMichelini.craftalism_economy.application.dto.PayExecutionResult;
-import io.github.HenriqueMichelini.craftalism_economy.domain.model.Player;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.enums.PayStatus;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.dto.PlayerResponseDTO;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.NotFoundException;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.BalanceApiService;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.PlayerApiService;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.TransactionApiService;
+import io.github.HenriqueMichelini.craftalism.economy.application.dto.PayExecutionResult;
+import io.github.HenriqueMichelini.craftalism.economy.domain.model.Player;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.enums.PayStatus;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.PlayerResponseDTO;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.BalanceApiService;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.PlayerApiService;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.TransactionApiService;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.UUID;

@@ -1,11 +1,11 @@
-package io.github.HenriqueMichelini.craftalism_economy.infra.api.service;
+package io.github.HenriqueMichelini.craftalism.economy.infra.api.service;
 
 import com.google.gson.Gson;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.client.HttpClientService;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.dto.TransactionRequestDTO;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.dto.TransactionResponseDTO;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.*;
-import io.github.HenriqueMichelini.craftalism_economy.infra.config.GsonFactory;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.client.HttpClientService;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.TransactionRequestDTO;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.TransactionResponseDTO;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.*;
+import io.github.HenriqueMichelini.craftalism.economy.infra.config.GsonFactory;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;

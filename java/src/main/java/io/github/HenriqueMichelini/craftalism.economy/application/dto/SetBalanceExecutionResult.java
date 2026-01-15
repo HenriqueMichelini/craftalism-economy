@@ -1,6 +1,6 @@
-package io.github.HenriqueMichelini.craftalism_economy.application.dto;
+package io.github.HenriqueMichelini.craftalism.economy.application.dto;
 
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.enums.SetBalanceStatus;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.enums.SetBalanceStatus;
 
 import java.util.Optional;
 import java.util.UUID;

@@ -1,8 +1,8 @@
-package io.github.HenriqueMichelini.craftalism_economy.domain.service.currency;
+package io.github.HenriqueMichelini.craftalism.economy.domain.service.currency;
 
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.PluginLogger;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.messages.CurrencyMessages;
-import io.github.HenriqueMichelini.craftalism_economy.infra.config.ConfigLoader;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.PluginLogger;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.CurrencyMessages;
+import io.github.HenriqueMichelini.craftalism.economy.infra.config.ConfigLoader;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FormatterFactory {

@@ -1,6 +1,6 @@
-package io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.messages;
+package io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages;
 
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.PluginLogger;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.PluginLogger;
 import org.bukkit.entity.Player;
 
 public class SystemMessages {

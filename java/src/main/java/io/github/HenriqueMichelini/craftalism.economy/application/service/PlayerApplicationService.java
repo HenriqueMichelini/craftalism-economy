@@ -1,11 +1,11 @@
-package io.github.HenriqueMichelini.craftalism_economy.application.service;
+package io.github.HenriqueMichelini.craftalism.economy.application.service;
 
-import io.github.HenriqueMichelini.craftalism_economy.domain.model.Player;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.dto.PlayerResponseDTO;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.ApiServerException;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.NotFoundException;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.repository.PlayerCacheRepository;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.PlayerApiService;
+import io.github.HenriqueMichelini.craftalism.economy.domain.model.Player;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.PlayerResponseDTO;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.ApiServerException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.repository.PlayerCacheRepository;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.PlayerApiService;
 
 import java.util.Optional;
 import java.util.UUID;

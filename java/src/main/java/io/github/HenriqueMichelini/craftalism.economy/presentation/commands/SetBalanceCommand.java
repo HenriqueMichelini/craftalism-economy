@@ -1,8 +1,8 @@
-package io.github.HenriqueMichelini.craftalism_economy.presentation.commands;
+package io.github.HenriqueMichelini.craftalism.economy.presentation.commands;
 
-import io.github.HenriqueMichelini.craftalism_economy.application.service.SetBalanceCommandApplicationService;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.messages.SetBalanceMessages;
-import io.github.HenriqueMichelini.craftalism_economy.presentation.validation.PlayerNameCheck;
+import io.github.HenriqueMichelini.craftalism.economy.application.service.SetBalanceCommandApplicationService;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.SetBalanceMessages;
+import io.github.HenriqueMichelini.craftalism.economy.presentation.validation.PlayerNameCheck;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import io.github.HenriqueMichelini.craftalism.economy.application.dto.SetBalanceExecutionResult;
 
 public class SetBalanceCommand implements CommandExecutor {
     private static final String PERMISSION = "craftalism.setbalance";
@@ -91,7 +92,7 @@ public class SetBalanceCommand implements CommandExecutor {
             String senderName,
             String targetName,
             Long amount,
-            io.github.HenriqueMichelini.craftalism_economy.application.dto.SetBalanceExecutionResult result
+            SetBalanceExecutionResult result
     ) {
         switch (result.status()) {
             case SUCCESS -> {

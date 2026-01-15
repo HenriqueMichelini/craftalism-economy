@@ -1,9 +1,9 @@
-package io.github.HenriqueMichelini.craftalism_economy.infra.api.service;
+package io.github.HenriqueMichelini.craftalism.economy.infra.api.service;
 
 import com.google.gson.Gson;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.client.HttpClientService;
-import io.github.HenriqueMichelini.craftalism_economy.infra.config.ConfigLoader;
-import io.github.HenriqueMichelini.craftalism_economy.infra.config.GsonFactory;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.client.HttpClientService;
+import io.github.HenriqueMichelini.craftalism.economy.infra.config.ConfigLoader;
+import io.github.HenriqueMichelini.craftalism.economy.infra.config.GsonFactory;
 
 public final class ApiServiceFactory {
     private final ConfigLoader cfg;

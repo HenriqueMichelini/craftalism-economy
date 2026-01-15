@@ -1,6 +1,6 @@
-package io.github.HenriqueMichelini.craftalism_economy.infra.api.client;
+package io.github.HenriqueMichelini.craftalism.economy.infra.api.client;
 
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.ApiTimeoutException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.ApiTimeoutException;
 
 import java.net.URI;
 import java.net.http.*;

@@ -1,9 +1,9 @@
-package io.github.HenriqueMichelini.craftalism_economy.application.service;
+package io.github.HenriqueMichelini.craftalism.economy.application.service;
 
-import io.github.HenriqueMichelini.craftalism_economy.application.dto.SetBalanceExecutionResult;
-import io.github.HenriqueMichelini.craftalism_economy.domain.model.Player;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.NotFoundException;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.BalanceApiService;
+import io.github.HenriqueMichelini.craftalism.economy.application.dto.SetBalanceExecutionResult;
+import io.github.HenriqueMichelini.craftalism.economy.domain.model.Player;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.BalanceApiService;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;

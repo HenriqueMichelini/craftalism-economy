@@ -1,7 +1,7 @@
-package io.github.HenriqueMichelini.craftalism_economy.presentation.listeners;
+package io.github.HenriqueMichelini.craftalism.economy.presentation.listeners;
 
-import io.github.HenriqueMichelini.craftalism_economy.application.service.BalanceApplicationService;
-import io.github.HenriqueMichelini.craftalism_economy.application.service.PlayerApplicationService;
+import io.github.HenriqueMichelini.craftalism.economy.application.service.BalanceApplicationService;
+import io.github.HenriqueMichelini.craftalism.economy.application.service.PlayerApplicationService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

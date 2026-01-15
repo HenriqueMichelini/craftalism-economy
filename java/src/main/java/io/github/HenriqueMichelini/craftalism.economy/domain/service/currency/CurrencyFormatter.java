@@ -1,4 +1,4 @@
-package io.github.HenriqueMichelini.craftalism_economy.domain.service.currency;
+package io.github.HenriqueMichelini.craftalism.economy.domain.service.currency;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

@@ -1,10 +1,10 @@
-package io.github.HenriqueMichelini.craftalism_economy.presentation.commands;
+package io.github.HenriqueMichelini.craftalism.economy.presentation.commands;
 
-import io.github.HenriqueMichelini.craftalism_economy.application.dto.BalanceExecutionResult;
-import io.github.HenriqueMichelini.craftalism_economy.application.service.BalanceCommandApplicationService;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.currency.CurrencyFormatter;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.messages.BalanceMessages;
-import io.github.HenriqueMichelini.craftalism_economy.presentation.validation.PlayerNameCheck;
+import io.github.HenriqueMichelini.craftalism.economy.application.dto.BalanceExecutionResult;
+import io.github.HenriqueMichelini.craftalism.economy.application.service.BalanceCommandApplicationService;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.CurrencyFormatter;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.BalanceMessages;
+import io.github.HenriqueMichelini.craftalism.economy.presentation.validation.PlayerNameCheck;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

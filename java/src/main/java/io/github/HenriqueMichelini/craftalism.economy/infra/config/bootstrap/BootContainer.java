@@ -1,19 +1,19 @@
-package io.github.HenriqueMichelini.craftalism_economy.infra.config.bootstrap;
+package io.github.HenriqueMichelini.craftalism.economy.infra.config.bootstrap;
 
-import io.github.HenriqueMichelini.craftalism_economy.CraftalismEconomy;
-import io.github.HenriqueMichelini.craftalism_economy.application.service.*;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.currency.CurrencyFormatter;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.currency.CurrencyParser;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.currency.FormatterFactory;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.LogManager;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.PluginLogger;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.ApiServiceFactory;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.BalanceApiService;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.PlayerApiService;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.TransactionApiService;
-import io.github.HenriqueMichelini.craftalism_economy.infra.config.ConfigLoader;
-import io.github.HenriqueMichelini.craftalism_economy.presentation.commands.CommandRegistrar;
-import io.github.HenriqueMichelini.craftalism_economy.presentation.listeners.EventRegistrar;
+import io.github.HenriqueMichelini.craftalism.economy.CraftalismEconomy;
+import io.github.HenriqueMichelini.craftalism.economy.application.service.*;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.CurrencyFormatter;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.CurrencyParser;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.FormatterFactory;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.LogManager;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.PluginLogger;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.ApiServiceFactory;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.BalanceApiService;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.PlayerApiService;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.TransactionApiService;
+import io.github.HenriqueMichelini.craftalism.economy.infra.config.ConfigLoader;
+import io.github.HenriqueMichelini.craftalism.economy.presentation.commands.CommandRegistrar;
+import io.github.HenriqueMichelini.craftalism.economy.presentation.listeners.EventRegistrar;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class BootContainer {

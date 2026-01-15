@@ -1,8 +1,8 @@
-package io.github.HenriqueMichelini.craftalism_economy.application.service;
+package io.github.HenriqueMichelini.craftalism.economy.application.service;
 
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.repository.BalanceCacheRepository;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.repository.PlayerCacheRepository;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.ApiServiceFactory;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.repository.BalanceCacheRepository;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.repository.PlayerCacheRepository;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.ApiServiceFactory;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ApplicationServiceFactory {

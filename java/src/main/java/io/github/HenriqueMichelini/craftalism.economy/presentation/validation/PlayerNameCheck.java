@@ -1,4 +1,4 @@
-package io.github.HenriqueMichelini.craftalism_economy.presentation.validation;
+package io.github.HenriqueMichelini.craftalism.economy.presentation.validation;
 
 public class PlayerNameCheck {
     public boolean isValid(String name) {

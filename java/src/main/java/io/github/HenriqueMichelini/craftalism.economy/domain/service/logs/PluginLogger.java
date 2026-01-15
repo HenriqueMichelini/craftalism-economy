@@ -1,4 +1,4 @@
-package io.github.HenriqueMichelini.craftalism_economy.domain.service.logs;
+package io.github.HenriqueMichelini.craftalism.economy.domain.service.logs;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;

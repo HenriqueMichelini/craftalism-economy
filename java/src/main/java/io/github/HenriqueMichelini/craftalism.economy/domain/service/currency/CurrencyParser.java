@@ -1,6 +1,6 @@
-package io.github.HenriqueMichelini.craftalism_economy.domain.service.currency;
+package io.github.HenriqueMichelini.craftalism.economy.domain.service.currency;
 
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.messages.CurrencyMessages;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.CurrencyMessages;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 

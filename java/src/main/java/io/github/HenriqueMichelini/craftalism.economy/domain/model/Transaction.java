@@ -1,4 +1,4 @@
-package io.github.HenriqueMichelini.craftalism_economy.domain.model;
+package io.github.HenriqueMichelini.craftalism.economy.domain.model;
 
 import java.time.Instant;
 import java.util.UUID;

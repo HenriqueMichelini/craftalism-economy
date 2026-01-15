@@ -1,4 +1,4 @@
-package io.github.HenriqueMichelini.craftalism_economy.infra.config;
+package io.github.HenriqueMichelini.craftalism.economy.infra.config;
 
 import com.google.gson.*;
 import java.lang.reflect.Type;

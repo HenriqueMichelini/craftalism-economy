@@ -1,3 +1,3 @@
-package io.github.HenriqueMichelini.craftalism_economy.infra.api.dto;
+package io.github.HenriqueMichelini.craftalism.economy.infra.api.dto;
 
 public record BalanceUpdateRequestDTO(long amount) {}

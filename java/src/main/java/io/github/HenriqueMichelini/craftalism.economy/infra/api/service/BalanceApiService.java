@@ -1,16 +1,16 @@
-package io.github.HenriqueMichelini.craftalism_economy.infra.api.service;
+package io.github.HenriqueMichelini.craftalism.economy.infra.api.service;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.client.HttpClientService;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.dto.BalanceRequestDTO;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.dto.BalanceResponseDTO;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.dto.BalanceUpdateRequestDTO;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.ApiException;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.ApiServerException;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.NotFoundException;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions.RateLimitException;
-import io.github.HenriqueMichelini.craftalism_economy.infra.config.GsonFactory;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.client.HttpClientService;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceRequestDTO;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceResponseDTO;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceUpdateRequestDTO;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.ApiException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.ApiServerException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.RateLimitException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.config.GsonFactory;
 
 import java.lang.reflect.Type;
 import java.util.List;

@@ -1,6 +1,6 @@
-package io.github.HenriqueMichelini.craftalism_economy.domain.service;
+package io.github.HenriqueMichelini.craftalism.economy.domain.service;
 
-import io.github.HenriqueMichelini.craftalism_economy.domain.model.Balance;
+import io.github.HenriqueMichelini.craftalism.economy.domain.model.Balance;
 
 public class FundsTransfer {
     public FundsTransfer() {

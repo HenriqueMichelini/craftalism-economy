@@ -1,4 +1,4 @@
-package io.github.HenriqueMichelini.craftalism_economy.infra.api.exceptions;
+package io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions;
 
 public class NotFoundException extends ClientException {
     public NotFoundException() {

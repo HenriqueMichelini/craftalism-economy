@@ -1,4 +1,4 @@
-package io.github.HenriqueMichelini.craftalism_economy.domain.service.validators;
+package io.github.HenriqueMichelini.craftalism.economy.domain.service.validators;
 
 public class AmountCheck {
     public AmountCheck() {}

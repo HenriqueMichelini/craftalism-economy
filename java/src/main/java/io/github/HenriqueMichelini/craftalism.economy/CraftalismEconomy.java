@@ -1,11 +1,9 @@
-package io.github.HenriqueMichelini.craftalism_economy;
+package io.github.HenriqueMichelini.craftalism.economy;
 
-import io.github.HenriqueMichelini.craftalism_economy.application.service.*;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.currency.CurrencyFormatter;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.currency.CurrencyParser;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.PluginLogger;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.messages.*;
-import io.github.HenriqueMichelini.craftalism_economy.infra.config.bootstrap.BootContainer;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.CurrencyFormatter;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.CurrencyParser;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.PluginLogger;
+import io.github.HenriqueMichelini.craftalism.economy.infra.config.bootstrap.BootContainer;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class CraftalismEconomy extends JavaPlugin {

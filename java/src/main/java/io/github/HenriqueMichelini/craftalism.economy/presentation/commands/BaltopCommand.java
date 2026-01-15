@@ -1,8 +1,8 @@
-package io.github.HenriqueMichelini.craftalism_economy.presentation.commands;
+package io.github.HenriqueMichelini.craftalism.economy.presentation.commands;
 
-import io.github.HenriqueMichelini.craftalism_economy.application.service.BaltopCommandApplicationService;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.currency.CurrencyFormatter;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.messages.BaltopMessages;
+import io.github.HenriqueMichelini.craftalism.economy.application.service.BaltopCommandApplicationService;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.CurrencyFormatter;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.BaltopMessages;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

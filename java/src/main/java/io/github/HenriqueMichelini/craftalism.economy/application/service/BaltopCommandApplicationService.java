@@ -1,8 +1,8 @@
-package io.github.HenriqueMichelini.craftalism_economy.application.service;
+package io.github.HenriqueMichelini.craftalism.economy.application.service;
 
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.dto.BalanceResponseDTO;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.BalanceApiService;
-import io.github.HenriqueMichelini.craftalism_economy.infra.api.service.PlayerApiService;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceResponseDTO;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.BalanceApiService;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.PlayerApiService;
 
 import java.util.ArrayList;
 import java.util.List;

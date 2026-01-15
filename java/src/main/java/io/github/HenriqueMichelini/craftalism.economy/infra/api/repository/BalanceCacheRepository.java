@@ -1,9 +1,9 @@
-package io.github.HenriqueMichelini.craftalism_economy.infra.api.repository;
+package io.github.HenriqueMichelini.craftalism.economy.infra.api.repository;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
-import io.github.HenriqueMichelini.craftalism_economy.domain.model.Balance;
+import io.github.HenriqueMichelini.craftalism.economy.domain.model.Balance;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;

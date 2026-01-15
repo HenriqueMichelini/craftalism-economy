@@ -1,13 +1,13 @@
-package io.github.HenriqueMichelini.craftalism_economy.presentation.commands;
+package io.github.HenriqueMichelini.craftalism.economy.presentation.commands;
 
-import io.github.HenriqueMichelini.craftalism_economy.CraftalismEconomy;
-import io.github.HenriqueMichelini.craftalism_economy.application.service.ApplicationServiceFactory;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.currency.FormatterFactory;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.messages.BalanceMessages;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.messages.BaltopMessages;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.messages.PayMessages;
-import io.github.HenriqueMichelini.craftalism_economy.domain.service.logs.messages.SetBalanceMessages;
-import io.github.HenriqueMichelini.craftalism_economy.presentation.validation.PlayerNameCheck;
+import io.github.HenriqueMichelini.craftalism.economy.CraftalismEconomy;
+import io.github.HenriqueMichelini.craftalism.economy.application.service.ApplicationServiceFactory;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.FormatterFactory;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.BalanceMessages;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.BaltopMessages;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.PayMessages;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.SetBalanceMessages;
+import io.github.HenriqueMichelini.craftalism.economy.presentation.validation.PlayerNameCheck;
 import org.bukkit.command.CommandExecutor;
 
 import java.util.Objects;

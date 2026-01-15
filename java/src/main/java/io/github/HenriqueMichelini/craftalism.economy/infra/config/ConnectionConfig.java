@@ -1,4 +1,4 @@
-package io.github.HenriqueMichelini.craftalism_economy.infra.config;
+package io.github.HenriqueMichelini.craftalism.economy.infra.config;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;

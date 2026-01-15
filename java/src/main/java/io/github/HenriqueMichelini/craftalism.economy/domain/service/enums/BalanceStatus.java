@@ -1,4 +1,4 @@
-package io.github.HenriqueMichelini.craftalism_economy.domain.service.enums;
+package io.github.HenriqueMichelini.craftalism.economy.domain.service.enums;
 
 public enum BalanceStatus {
     SUCCESS_SELF,

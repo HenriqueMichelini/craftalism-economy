@@ -1,6 +1,7 @@
-package io.github.HenriqueMichelini.craftalism_economy.presentation.listeners;
+package io.github.HenriqueMichelini.craftalism.economy.presentation.listeners;
 
-import io.github.HenriqueMichelini.craftalism_economy.application.service.*;
+import io.github.HenriqueMichelini.craftalism.economy.application.service.BalanceApplicationService;
+import io.github.HenriqueMichelini.craftalism.economy.application.service.PlayerApplicationService;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class EventRegistrar {
