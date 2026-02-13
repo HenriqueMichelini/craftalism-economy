@@ -25,10 +25,10 @@ jobs:
           cache: 'gradle'
           
       - name: Make gradlew executable
-        run: chmod +x ./gradlew
+        run: chmod +x .java/gradlew
         
       - name: Build with Gradle
-        run: ./gradlew build -x test --no-daemon
+        run: .java/gradlew build -x test --no-daemon
         
       - name: Get version from tag
         id: version
