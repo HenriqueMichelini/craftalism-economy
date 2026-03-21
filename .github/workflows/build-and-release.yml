@@ -20,7 +20,7 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: 'gradle'
           
@@ -39,8 +39,7 @@ jobs:
       - name: Prepare release artifacts
         run: |
           mkdir -p release
-          # Find the JAR file and copy it with a versioned name
-          find java/build/libs -name "*.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" -exec cp {} release/craftalism-economy-${{ steps.version.outputs.version }}.jar \;
+          cp java/build/libs/*-all.jar release/craftalism-economy-${{ steps.version.outputs.version }}.jar
           
       - name: Create Release
         uses: softprops/action-gh-release@v2
