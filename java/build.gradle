@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'com.gradleup.shadow' version '8.3.0'
 }
 
 group = 'io.github.HenriqueMichelini'
@@ -24,19 +23,22 @@ dependencies {
 
     // Shaded libs
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+    implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'org.apache.httpcomponents:httpclient:4.5.13'
 }
 
-shadowJar {
+tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set('')
+    from {
+        configurations.runtimeClasspath.collect { dependency ->
+            dependency.isDirectory() ? dependency : zipTree(dependency)
+        }
+    }
     exclude 'org/mockbukkit/**'
     exclude 'junit/**'
     exclude 'org/junit/**'
     exclude 'org/mockito/**'
-
-    relocate 'com.github.benmanes.caffeine', 'io.github.HenriqueMichelini.craftalism_economy.libs.caffeine'
-    relocate 'org.apache.http', 'io.github.HenriqueMichelini.craftalism_economy.libs.apache.http'
-
-    archiveClassifier.set('shadow')
 }
 
 
