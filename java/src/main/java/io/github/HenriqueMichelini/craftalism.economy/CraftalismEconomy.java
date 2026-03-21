@@ -16,16 +16,20 @@ public final class CraftalismEconomy extends JavaPlugin {
         reloadConfig();
 
         this.container = new BootContainer(this, this);
-
-        this.container.initialize();
-
-
-        getLogger().info("Plugin enabled successfully");
+        try {
+            this.container.initialize();
+            getLogger().info("Plugin enabled successfully");
+        } catch (RuntimeException exception) {
+            getLogger().severe("Failed to enable CraftalismEconomy: " + exception.getMessage());
+            throw exception;
+        }
     }
 
     @Override
     public void onDisable() {
-        container.shutdown();
+        if (container != null) {
+            container.shutdown();
+        }
     }
 
     public CurrencyFormatter getCurrencyFormatter() {

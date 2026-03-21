@@ -10,7 +10,7 @@ commands:
   balance:
     description: Check your balance.
     usage: /balance or /balance <player>
-    permission: craftalism.balance
+    permission: craftalism.balance.self
     permission-message: You do not have permission to use this command.
   setbalance:
     description: Set a player's balance (console/ops only).
