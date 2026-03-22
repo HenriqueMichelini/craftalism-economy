@@ -1,5 +1,0 @@
-#default 4 decimal places for default-balance (e.g 100000000 = 10,000.00)
-default-balance: 100000000
-locale: en-US
-currency-symbol: "$"
-null-representation: "—"

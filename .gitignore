@@ -32,4 +32,4 @@ java/build
 
 java/.env
 !java/.env.example
-.idea
+.idea/
