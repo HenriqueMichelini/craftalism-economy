@@ -1,6 +1,7 @@
 package io.github.HenriqueMichelini.craftalism.economy.infra.config;
 
 import io.github.HenriqueMichelini.craftalism.economy.CraftalismEconomy;
+import io.github.HenriqueMichelini.craftalism.economy.infra.config.ConnectionConfig;
 import java.util.Locale;
 
 public final class ConfigLoader {
@@ -63,8 +64,6 @@ public final class ConfigLoader {
         if (envUrl != null && !envUrl.isBlank()) {
             return envUrl;
         }
-        return plugin
-            .getConfig()
-            .getString("api-base-url", "http://localhost:8080");
+        return new ConnectionConfig(plugin).getUrl();
     }
 }
