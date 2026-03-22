@@ -1,5 +1,5 @@
 name: CraftalismEconomy
-version: 0.1.7
+version: 0.1.8
 main: io.github.HenriqueMichelini.craftalism.economy.CraftalismEconomy
 api-version: 1.21
 commands:
