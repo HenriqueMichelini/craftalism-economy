@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.gradleup.shadow' version '8.3.6'
 }
 
 group = 'io.github.HenriqueMichelini'
@@ -27,17 +28,8 @@ dependencies {
     implementation 'org.apache.httpcomponents:httpclient:4.5.13'
 }
 
-tasks.jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn configurations.runtimeClasspath
-    archiveClassifier.set('')
-
-    from sourceSets.main.output
-    from {
-        configurations.runtimeClasspath.collect { dependency ->
-            dependency.isDirectory() ? dependency : zipTree(dependency)
-        }
-    }
+shadowJar {
+    archiveClassifier.set('')  // no "-all" suffix
 
     exclude 'org/mockbukkit/**'
     exclude 'junit/**'
@@ -76,3 +68,5 @@ processResources {
         expand(version: version)
     }
 }
+
+assemble.dependsOn shadowJar
