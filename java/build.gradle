@@ -28,6 +28,17 @@ dependencies {
 }
 
 tasks.jar {
+    archiveClassifier.set('')
+}
+
+tasks.register('fatJar', Jar) {
+    group = 'build'
+    description = 'Builds the plugin jar with bundled runtime dependencies.'
+    archiveClassifier.set('all')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier.set('')
     from {
@@ -35,10 +46,15 @@ tasks.jar {
             dependency.isDirectory() ? dependency : zipTree(dependency)
         }
     }
+
     exclude 'org/mockbukkit/**'
     exclude 'junit/**'
     exclude 'org/junit/**'
     exclude 'org/mockito/**'
+}
+
+tasks.assemble {
+    dependsOn tasks.named('fatJar')
 }
 
 
