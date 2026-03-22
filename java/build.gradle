@@ -39,6 +39,8 @@ tasks.register('fatJar', Jar) {
 
     from sourceSets.main.output
     dependsOn configurations.runtimeClasspath
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set('')
     from {
         configurations.runtimeClasspath.collect { dependency ->
             dependency.isDirectory() ? dependency : zipTree(dependency)
