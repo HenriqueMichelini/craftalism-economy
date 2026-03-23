@@ -1,17 +1,21 @@
 package io.github.HenriqueMichelini.craftalism.economy.infra.config;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import io.github.HenriqueMichelini.craftalism.economy.CraftalismEconomy;
+import java.util.Locale;
+import java.util.logging.Logger;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Locale;
-import java.util.logging.Logger;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.mockito.MockedConstruction;
 
 class ConfigLoaderTest {
+
     private FileConfiguration config;
     private Logger logger;
     private ConfigLoader loader;
@@ -63,16 +67,14 @@ class ConfigLoaderTest {
 
     @Test
     void defaultBalance_withPositiveValue_returnsConfigured() {
-        when(config.getLong("default-balance", 100_000_000L))
-                .thenReturn(500_000L);
+        when(config.getLong("default-balance", 100_000_000L)).thenReturn(500_000L);
 
         assertEquals(500_000L, loader.defaultBalance());
     }
 
     @Test
     void defaultBalance_withNegativeValue_returnsFallback() {
-        when(config.getLong("default-balance", 100_000_000L))
-                .thenReturn(-50L);
+        when(config.getLong("default-balance", 100_000_000L)).thenReturn(-50L);
 
         long result = loader.defaultBalance();
 
@@ -81,18 +83,38 @@ class ConfigLoaderTest {
     }
 
     @Test
-    void baseUrl_readsValueOrDefault() {
-        when(config.getString("api-base-url", "http://localhost:8080"))
-                .thenReturn("https://external-api.test");
-
-        assertEquals("https://external-api.test", loader.baseUrl());
+    void baseUrl_readsValueFromConnectionConfig() {
+        try (
+            MockedConstruction<ConnectionConfig> mocked = mockConstruction(
+                ConnectionConfig.class,
+                (connectionConfig, context) -> when(connectionConfig.getUrl()).thenReturn("https://external-api.test")
+            )
+        ) {
+            assertEquals("https://external-api.test", loader.baseUrl());
+            assertEquals(1, mocked.constructed().size());
+        }
     }
 
     @Test
-    void baseUrl_usesDefaultWhenMissing() {
-        when(config.getString("api-base-url", "http://localhost:8080"))
-                .thenReturn("http://localhost:8080");
-
-        assertEquals("http://localhost:8080", loader.baseUrl());
+    void oauthFields_readFromConnectionConfig() {
+        try (
+            MockedConstruction<ConnectionConfig> mocked = mockConstruction(
+                ConnectionConfig.class,
+                (connectionConfig, context) -> {
+                    when(connectionConfig.getAuthServerUrl()).thenReturn("https://auth.example.test");
+                    when(connectionConfig.getTokenPath()).thenReturn("/realms/token");
+                    when(connectionConfig.getClientId()).thenReturn("minecraft-server");
+                    when(connectionConfig.getClientSecret()).thenReturn("super-secret");
+                    when(connectionConfig.getScopes()).thenReturn("api:read api:write");
+                }
+            )
+        ) {
+            assertEquals("https://auth.example.test", loader.authServerUrl());
+            assertEquals("/realms/token", loader.tokenPath());
+            assertEquals("minecraft-server", loader.clientId());
+            assertEquals("super-secret", loader.clientSecret());
+            assertEquals("api:read api:write", loader.oauthScopes());
+            assertEquals(5, mocked.constructed().size());
+        }
     }
 }

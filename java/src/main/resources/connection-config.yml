@@ -1,4 +1,6 @@
 url: "http://localhost:8080"
 auth-server-url: "http://localhost:9000"
+token-path: "/oauth2/token"
 client-id: "minecraft-server"
 client-secret: "change_me"
+scopes: "api:read api:write"

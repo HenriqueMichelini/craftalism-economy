@@ -11,6 +11,7 @@ public final class ApiServiceFactory {
 
     private final ConfigLoader cfg;
     private final Gson gson = GsonFactory.getInstance();
+    private final OAuth2TokenService tokenService;
 
     // lightweight lazy-initialized services
     private HttpClientService httpClient;
@@ -21,27 +22,26 @@ public final class ApiServiceFactory {
     public ApiServiceFactory(ConfigLoader cfg) {
         this.cfg = cfg;
 
-        OAuth2TokenService tokenService = new OAuth2TokenService(
+        this.tokenService = new OAuth2TokenService(
             HttpClient.newHttpClient(),
-            cfg.authServerUrl(),
+            resolveTokenUrl(cfg),
             cfg.clientId(),
-            cfg.clientSecret()
+            cfg.clientSecret(),
+            cfg.oauthScopes()
         );
 
-        this.httpClient = new HttpClientService(cfg.baseUrl(), tokenService);
+        this.httpClient = new HttpClientService(cfg.baseUrl(), this.tokenService);
     }
 
-    private synchronized void ensureHttpClient(
-        OAuth2TokenService tokenService
-    ) {
+    private synchronized void ensureHttpClient() {
         if (httpClient == null) httpClient = new HttpClientService(
             cfg.baseUrl(),
             tokenService
         );
     }
 
-    public PlayerApiService getPlayerApi(OAuth2TokenService tokenService) {
-        ensureHttpClient(tokenService);
+    public PlayerApiService getPlayerApi() {
+        ensureHttpClient();
         if (playerApiService == null) playerApiService = new PlayerApiService(
             httpClient,
             gson
@@ -49,19 +49,35 @@ public final class ApiServiceFactory {
         return playerApiService;
     }
 
-    public BalanceApiService getBalanceApi(OAuth2TokenService tokenService) {
-        ensureHttpClient(tokenService);
+    public BalanceApiService getBalanceApi() {
+        ensureHttpClient();
         if (balanceApiService == null) balanceApiService =
             new BalanceApiService(httpClient);
         return balanceApiService;
     }
 
-    public TransactionApiService getTransactionApi(
-        OAuth2TokenService tokenService
-    ) {
-        ensureHttpClient(tokenService);
+    public TransactionApiService getTransactionApi() {
+        ensureHttpClient();
         if (transactionApiService == null) transactionApiService =
             new TransactionApiService(httpClient);
         return transactionApiService;
+    }
+
+    private static String resolveTokenUrl(ConfigLoader cfg) {
+        String tokenPath = cfg.tokenPath();
+        if (tokenPath.startsWith("http://") || tokenPath.startsWith("https://")) {
+            return tokenPath;
+        }
+
+        String authServerUrl = cfg.authServerUrl();
+        if (authServerUrl.endsWith("/") && tokenPath.startsWith("/")) {
+            return authServerUrl.substring(0, authServerUrl.length() - 1) + tokenPath;
+        }
+
+        if (!authServerUrl.endsWith("/") && !tokenPath.startsWith("/")) {
+            return authServerUrl + "/" + tokenPath;
+        }
+
+        return authServerUrl + tokenPath;
     }
 }

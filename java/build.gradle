@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'com.gradleup.shadow' version '8.3.6'
 }
 
 group = 'io.github.HenriqueMichelini'
@@ -27,16 +26,6 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'org.apache.httpcomponents:httpclient:4.5.13'
 }
-
-shadowJar {
-    archiveClassifier.set('')
-
-    exclude 'org/mockbukkit/**'
-    exclude 'junit/**'
-    exclude 'org/junit/**'
-    exclude 'org/mockito/**'
-}
-
 
 configurations {
     testImplementation {
@@ -70,4 +59,23 @@ processResources {
     }
 }
 
-assemble.dependsOn shadowJar
+tasks.register('fatJar', Jar) {
+    archiveClassifier.set('')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from sourceSets.main.output
+
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath
+            .findAll { it.exists() }
+            .collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+    exclude 'org/mockbukkit/**'
+    exclude 'junit/**'
+    exclude 'org/junit/**'
+    exclude 'org/mockito/**'
+}
+
+assemble.dependsOn tasks.named('fatJar')
