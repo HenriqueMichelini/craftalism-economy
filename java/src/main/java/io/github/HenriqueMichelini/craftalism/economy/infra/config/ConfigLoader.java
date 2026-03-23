@@ -66,4 +66,22 @@ public final class ConfigLoader {
         }
         return new ConnectionConfig(plugin).getUrl();
     }
+
+    public String authServerUrl() {
+        String env = System.getenv("AUTH_ISSUER_URI");
+        if (env != null && !env.isBlank()) return env;
+        return new ConnectionConfig(plugin).getAuthServerUrl();
+    }
+
+    public String clientId() {
+        String env = System.getenv("MINECRAFT_CLIENT_ID");
+        if (env != null && !env.isBlank()) return env;
+        return new ConnectionConfig(plugin).getClientId();
+    }
+
+    public String clientSecret() {
+        String env = System.getenv("CRAFTALISM_API_KEY");
+        if (env != null && !env.isBlank()) return env;
+        return new ConnectionConfig(plugin).getClientSecret();
+    }
 }

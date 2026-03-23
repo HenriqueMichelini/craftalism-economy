@@ -1,1 +1,4 @@
 url: "http://localhost:8080"
+auth-server-url: "http://localhost:9000"
+client-id: "minecraft-server"
+client-secret: "change_me"
