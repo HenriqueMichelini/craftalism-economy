@@ -58,13 +58,13 @@ class BalanceApiServiceTest {
         String jsonResponse = gson.toJson(responseDTO);
 
         HttpResponse<String> mockResponse = createMockResponse(jsonResponse);
-        when(httpClient.get("/balances/" + testUuid))
+        when(httpClient.get("/api/balances/" + testUuid))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         Long balance = service.getBalance(testUuid).get().amount();
 
         assertEquals(expectedBalance, balance);
-        verify(httpClient).get("/balances/" + testUuid);
+        verify(httpClient).get("/api/balances/" + testUuid);
     }
 
     @Test
@@ -74,7 +74,7 @@ class BalanceApiServiceTest {
         String jsonResponse = gson.toJson(responseDTO);
 
         HttpResponse<String> mockResponse = createMockResponse(jsonResponse);
-        when(httpClient.get("/balances/" + testUuid))
+        when(httpClient.get("/api/balances/" + testUuid))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         Long balance = service.getBalance(testUuid).get().amount();
@@ -90,7 +90,7 @@ class BalanceApiServiceTest {
         String jsonResponse = gson.toJson(responseDTO);
 
         HttpResponse<String> mockResponse = createMockResponse(jsonResponse);
-        when(httpClient.get("/balances/" + testUuid))
+        when(httpClient.get("/api/balances/" + testUuid))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         Long balance = service.getBalance(testUuid).get().amount();
@@ -101,7 +101,7 @@ class BalanceApiServiceTest {
     @Test
     @DisplayName("Should handle HTTP error on get balance")
     void shouldHandleHttpErrorOnGetBalance() {
-        when(httpClient.get("/balances/" + testUuid))
+        when(httpClient.get("/api/balances/" + testUuid))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("HTTP Error")));
 
         CompletableFuture<Long> result = service.getBalance(testUuid).thenApply(BalanceResponseDTO::amount);
@@ -114,7 +114,7 @@ class BalanceApiServiceTest {
     @DisplayName("Should handle malformed JSON on get balance")
     void shouldHandleMalformedJsonOnGetBalance() {
         HttpResponse<String> mockResponse = createMockResponse("{invalid json}");
-        when(httpClient.get("/balances/" + testUuid))
+        when(httpClient.get("/api/balances/" + testUuid))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         assertThrows(ExecutionException.class,
@@ -129,13 +129,13 @@ class BalanceApiServiceTest {
         String expectedJson = gson.toJson(requestDTO);
 
         HttpResponse<String> mockResponse = createMockResponse("{}");
-        when(httpClient.post("/balances/" + testUuid + "/deposit", expectedJson))
+        when(httpClient.post("/api/balances/" + testUuid + "/deposit?amount=" + depositAmount, expectedJson))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         Void result = service.deposit(testUuid, depositAmount).get();
 
         assertNull(result);
-        verify(httpClient).post("/balances/" + testUuid + "/deposit", expectedJson);
+        verify(httpClient).post("/api/balances/" + testUuid + "/deposit?amount=" + depositAmount, expectedJson);
     }
 
     @Test
@@ -146,7 +146,7 @@ class BalanceApiServiceTest {
         String expectedJson = gson.toJson(requestDTO);
 
         HttpResponse<String> mockResponse = createMockResponse("{}");
-        when(httpClient.post("/balances/" + testUuid + "/deposit", expectedJson))
+        when(httpClient.post("/api/balances/" + testUuid + "/deposit?amount=" + minAmount, expectedJson))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         Void result = service.deposit(testUuid, minAmount).get();
@@ -162,7 +162,7 @@ class BalanceApiServiceTest {
         String expectedJson = gson.toJson(requestDTO);
 
         HttpResponse<String> mockResponse = createMockResponse("{}");
-        when(httpClient.post("/balances/" + testUuid + "/deposit", expectedJson))
+        when(httpClient.post("/api/balances/" + testUuid + "/deposit?amount=" + largeAmount, expectedJson))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         Void result = service.deposit(testUuid, largeAmount).get();
@@ -177,7 +177,7 @@ class BalanceApiServiceTest {
         BalanceUpdateRequestDTO requestDTO = new BalanceUpdateRequestDTO(depositAmount);
         String expectedJson = gson.toJson(requestDTO);
 
-        when(httpClient.post("/balances/" + testUuid + "/deposit", expectedJson))
+        when(httpClient.post("/api/balances/" + testUuid + "/deposit?amount=" + depositAmount, expectedJson))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Network Error")));
 
         CompletableFuture<Void> result = service.deposit(testUuid, depositAmount);
@@ -194,13 +194,13 @@ class BalanceApiServiceTest {
         String expectedJson = gson.toJson(requestDTO);
 
         HttpResponse<String> mockResponse = createMockResponse("{}");
-        when(httpClient.post("/balances/" + testUuid + "/withdraw", expectedJson))
+        when(httpClient.post("/api/balances/" + testUuid + "/withdraw?amount=" + withdrawAmount, expectedJson))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         Void result = service.withdraw(testUuid, withdrawAmount).get();
 
         assertNull(result);
-        verify(httpClient).post("/balances/" + testUuid + "/withdraw", expectedJson);
+        verify(httpClient).post("/api/balances/" + testUuid + "/withdraw?amount=" + withdrawAmount, expectedJson);
     }
 
     @Test
@@ -211,7 +211,7 @@ class BalanceApiServiceTest {
         String expectedJson = gson.toJson(requestDTO);
 
         HttpResponse<String> mockResponse = createMockResponse("{}");
-        when(httpClient.post("/balances/" + testUuid + "/withdraw", expectedJson))
+        when(httpClient.post("/api/balances/" + testUuid + "/withdraw?amount=" + minAmount, expectedJson))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         Void result = service.withdraw(testUuid, minAmount).get();
@@ -226,7 +226,7 @@ class BalanceApiServiceTest {
         BalanceUpdateRequestDTO requestDTO = new BalanceUpdateRequestDTO(withdrawAmount);
         String expectedJson = gson.toJson(requestDTO);
 
-        when(httpClient.post("/balances/" + testUuid + "/withdraw", expectedJson))
+        when(httpClient.post("/api/balances/" + testUuid + "/withdraw?amount=" + withdrawAmount, expectedJson))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Insufficient funds")));
 
         CompletableFuture<Void> result = service.withdraw(testUuid, withdrawAmount);
@@ -247,9 +247,9 @@ class BalanceApiServiceTest {
         HttpResponse<String> mockResponse1 = createMockResponse(gson.toJson(response1));
         HttpResponse<String> mockResponse2 = createMockResponse(gson.toJson(response2));
 
-        when(httpClient.get("/balances/" + uuid1))
+        when(httpClient.get("/api/balances/" + uuid1))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse1));
-        when(httpClient.get("/balances/" + uuid2))
+        when(httpClient.get("/api/balances/" + uuid2))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse2));
 
         CompletableFuture<Long> future1 = service.getBalance(uuid1).thenApply(BalanceResponseDTO::amount);
@@ -266,7 +266,7 @@ class BalanceApiServiceTest {
         String[] capturedJson = new String[1];
 
         HttpResponse<String> mockResponse = createMockResponse("{}");
-        when(httpClient.post(eq("/balances/" + testUuid + "/deposit"), anyString()))
+        when(httpClient.post(eq("/api/balances/" + testUuid + "/deposit?amount=" + amount), anyString()))
                 .thenAnswer(invocation -> {
                     capturedJson[0] = invocation.getArgument(1);
                     return CompletableFuture.completedFuture(mockResponse);
@@ -285,7 +285,7 @@ class BalanceApiServiceTest {
         String[] capturedJson = new String[1];
 
         HttpResponse<String> mockResponse = createMockResponse("{}");
-        when(httpClient.post(eq("/balances/" + testUuid + "/withdraw"), anyString()))
+        when(httpClient.post(eq("/api/balances/" + testUuid + "/withdraw?amount=" + amount), anyString()))
                 .thenAnswer(invocation -> {
                     capturedJson[0] = invocation.getArgument(1);
                     return CompletableFuture.completedFuture(mockResponse);
@@ -314,7 +314,7 @@ class BalanceApiServiceTest {
         String jsonResponse = gson.toJson(expectedBalances);
         HttpResponse<String> mockResponse = createMockResponse(jsonResponse);
 
-        when(httpClient.get("/balances/top?limit=" + limit))
+        when(httpClient.get("/api/balances/top?limit=" + limit))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         List<BalanceResponseDTO> result = service.getTopBalances(limit).get();
@@ -326,7 +326,7 @@ class BalanceApiServiceTest {
         assertEquals(uuid2, result.get(1).uuid());
         assertEquals(500_0000L, result.get(1).amount());
 
-        verify(httpClient).get("/balances/top?limit=" + limit);
+        verify(httpClient).get("/api/balances/top?limit=" + limit);
     }
 
     @Test
@@ -341,7 +341,7 @@ class BalanceApiServiceTest {
         String jsonResponse = gson.toJson(balances);
         HttpResponse<String> mockResponse = createMockResponse(jsonResponse);
 
-        when(httpClient.get("/balances/top?limit=" + customLimit))
+        when(httpClient.get("/api/balances/top?limit=" + customLimit))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         List<BalanceResponseDTO> result = service.getTopBalances(customLimit).get();
@@ -355,7 +355,7 @@ class BalanceApiServiceTest {
         String jsonResponse = gson.toJson(List.of());
         HttpResponse<String> mockResponse = createMockResponse(jsonResponse);
 
-        when(httpClient.get("/balances/top?limit=10"))
+        when(httpClient.get("/api/balances/top?limit=10"))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         List<BalanceResponseDTO> result = service.getTopBalances(10).get();
@@ -367,7 +367,7 @@ class BalanceApiServiceTest {
     @Test
     @DisplayName("Should handle HTTP error on get top balances")
     void shouldHandleHttpErrorOnGetTopBalances() {
-        when(httpClient.get("/balances/top?limit=10"))
+        when(httpClient.get("/api/balances/top?limit=10"))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("API Error")));
 
         CompletableFuture<List<BalanceResponseDTO>> result = service.getTopBalances(10);
@@ -380,7 +380,7 @@ class BalanceApiServiceTest {
     @DisplayName("Should handle malformed JSON on get top balances")
     void shouldHandleMalformedJsonOnGetTopBalances() {
         HttpResponse<String> mockResponse = createMockResponse("{invalid json}");
-        when(httpClient.get("/balances/top?limit=10"))
+        when(httpClient.get("/api/balances/top?limit=10"))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         assertThrows(ExecutionException.class,
@@ -398,7 +398,7 @@ class BalanceApiServiceTest {
         String jsonResponse = gson.toJson(balances);
         HttpResponse<String> mockResponse = createMockResponse(jsonResponse);
 
-        when(httpClient.get("/balances/top?limit=1"))
+        when(httpClient.get("/api/balances/top?limit=1"))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         List<BalanceResponseDTO> result = service.getTopBalances(1).get();

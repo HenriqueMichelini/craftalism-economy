@@ -60,7 +60,7 @@ class PlayerApiServiceTest {
         String jsonResponse = gson.toJson(expectedDTO);
 
         HttpResponse<String> mockResponse = createMockResponse(200, jsonResponse);
-        when(httpClient.get("/players/" + testUuid))
+        when(httpClient.get("/api/players/" + testUuid))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         PlayerResponseDTO result = service.getPlayerByUuid(testUuid).get();
@@ -70,14 +70,14 @@ class PlayerApiServiceTest {
         assertEquals(testName, result.name());
         assertEquals(testCreatedAt, result.createdAt());
 
-        verify(httpClient).get("/players/" + testUuid);
+        verify(httpClient).get("/api/players/" + testUuid);
     }
 
     @Test
     @DisplayName("Should throw NotFoundException when player not found by UUID")
     void shouldThrowNotFoundExceptionWhenPlayerNotFoundByUuid() {
         HttpResponse<String> mockResponse = createMockResponse(404, "{}");
-        when(httpClient.get("/players/" + testUuid))
+        when(httpClient.get("/api/players/" + testUuid))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         CompletableFuture<PlayerResponseDTO> result = service.getPlayerByUuid(testUuid);
@@ -89,7 +89,7 @@ class PlayerApiServiceTest {
     @Test
     @DisplayName("Should handle HTTP error on get player by UUID")
     void shouldHandleHttpErrorOnGetPlayerByUuid() {
-        when(httpClient.get("/players/" + testUuid))
+        when(httpClient.get("/api/players/" + testUuid))
                 .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Network Error")));
 
         CompletableFuture<PlayerResponseDTO> result = service.getPlayerByUuid(testUuid);
@@ -102,7 +102,7 @@ class PlayerApiServiceTest {
     @DisplayName("Should handle malformed JSON on get player by UUID")
     void shouldHandleMalformedJsonOnGetPlayerByUuid() {
         HttpResponse<String> mockResponse = createMockResponse(200, "{invalid json}");
-        when(httpClient.get("/players/" + testUuid))
+        when(httpClient.get("/api/players/" + testUuid))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         assertThrows(ExecutionException.class,
@@ -116,7 +116,7 @@ class PlayerApiServiceTest {
         String jsonResponse = gson.toJson(expectedDTO);
 
         HttpResponse<String> mockResponse = createMockResponse(200, jsonResponse);
-        when(httpClient.get("/players/" + testName))
+        when(httpClient.get("/api/players/name/" + testName))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         PlayerResponseDTO result = service.getPlayerByName(testName).get();
@@ -126,14 +126,14 @@ class PlayerApiServiceTest {
         assertEquals(testName, result.name());
         assertEquals(testCreatedAt, result.createdAt());
 
-        verify(httpClient).get("/players/" + testName);
+        verify(httpClient).get("/api/players/name/" + testName);
     }
 
     @Test
     @DisplayName("Should throw NotFoundException when player not found by name")
     void shouldThrowNotFoundExceptionWhenPlayerNotFoundByName() {
         HttpResponse<String> mockResponse = createMockResponse(404, "{}");
-        when(httpClient.get("/players/" + testName))
+        when(httpClient.get("/api/players/name/" + testName))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         CompletableFuture<PlayerResponseDTO> result = service.getPlayerByName(testName);
@@ -150,7 +150,7 @@ class PlayerApiServiceTest {
         String jsonResponse = gson.toJson(expectedDTO);
 
         HttpResponse<String> mockResponse = createMockResponse(200, jsonResponse);
-        when(httpClient.get("/players/" + specialName))
+        when(httpClient.get("/api/players/name/" + specialName))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         PlayerResponseDTO result = service.getPlayerByName(specialName).get();
@@ -166,7 +166,7 @@ class PlayerApiServiceTest {
         String jsonResponse = gson.toJson(expectedDTO);
 
         HttpResponse<String> mockResponse = createMockResponse(200, jsonResponse);
-        when(httpClient.get("/players/" + longName))
+        when(httpClient.get("/api/players/name/" + longName))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         PlayerResponseDTO result = service.getPlayerByName(longName).get();
@@ -184,7 +184,7 @@ class PlayerApiServiceTest {
         String responseJson = gson.toJson(responseDTO);
 
         HttpResponse<String> mockResponse = createMockResponse(201, responseJson);
-        when(httpClient.post("/players", expectedRequestJson))
+        when(httpClient.post("/api/players", expectedRequestJson))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         PlayerResponseDTO result = service.createPlayer(testUuid, testName).get();
@@ -194,7 +194,7 @@ class PlayerApiServiceTest {
         assertEquals(testName, result.name());
         assertNotNull(result.createdAt());
 
-        verify(httpClient).post("/players", expectedRequestJson);
+        verify(httpClient).post("/api/players", expectedRequestJson);
     }
 
     @Test
@@ -208,7 +208,7 @@ class PlayerApiServiceTest {
         String responseJson = gson.toJson(responseDTO);
 
         HttpResponse<String> mockResponse = createMockResponse(201, responseJson);
-        when(httpClient.post("/players", expectedRequestJson))
+        when(httpClient.post("/api/players", expectedRequestJson))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         PlayerResponseDTO result = service.createPlayer(testUuid, emptyName).get();

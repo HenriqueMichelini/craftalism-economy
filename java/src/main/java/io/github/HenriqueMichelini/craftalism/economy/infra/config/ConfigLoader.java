@@ -73,6 +73,12 @@ public final class ConfigLoader {
         return new ConnectionConfig(plugin).getAuthServerUrl();
     }
 
+    public String tokenPath() {
+        String env = System.getenv("AUTH_TOKEN_PATH");
+        if (env != null && !env.isBlank()) return env;
+        return new ConnectionConfig(plugin).getTokenPath();
+    }
+
     public String clientId() {
         String env = System.getenv("MINECRAFT_CLIENT_ID");
         if (env != null && !env.isBlank()) return env;
@@ -83,5 +89,11 @@ public final class ConfigLoader {
         String env = System.getenv("CRAFTALISM_API_KEY");
         if (env != null && !env.isBlank()) return env;
         return new ConnectionConfig(plugin).getClientSecret();
+    }
+
+    public String oauthScopes() {
+        String env = System.getenv("MINECRAFT_CLIENT_SCOPES");
+        if (env != null && !env.isBlank()) return env;
+        return new ConnectionConfig(plugin).getScopes();
     }
 }
