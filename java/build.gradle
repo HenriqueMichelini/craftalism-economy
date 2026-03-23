@@ -29,7 +29,7 @@ dependencies {
 }
 
 shadowJar {
-    archiveClassifier.set('')  // no "-all" suffix
+    archiveClassifier.set('')
 
     exclude 'org/mockbukkit/**'
     exclude 'junit/**'
@@ -50,14 +50,15 @@ test {
     jvmArgs "-XX:+EnableDynamicAgentLoading", "-Djdk.instrument.traceUsage"
 }
 
-def targetJavaVersion = 21
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-    options.release.set(targetJavaVersion)
+    options.release.set(21)
 }
 
 processResources {
