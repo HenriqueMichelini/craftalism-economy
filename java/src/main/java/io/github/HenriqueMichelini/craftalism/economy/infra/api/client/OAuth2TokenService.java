@@ -53,34 +53,32 @@ public class OAuth2TokenService {
             ) {
                 return CompletableFuture.completedFuture(cachedToken.get());
             }
-
-            if (inFlightTokenRequest != null && !inFlightTokenRequest.isDone()) {
+            if (
+                inFlightTokenRequest != null && !inFlightTokenRequest.isDone()
+            ) {
                 return inFlightTokenRequest;
             }
-
-            inFlightTokenRequest = fetchNewToken()
-                .whenComplete((token, error) -> {
+            inFlightTokenRequest = fetchNewToken().whenComplete(
+                (token, error) -> {
                     synchronized (this) {
                         inFlightTokenRequest = null;
                     }
-                });
+                }
+            );
             return inFlightTokenRequest;
         }
     }
 
     private CompletableFuture<String> fetchNewToken() {
-        return requestToken(false).thenCompose(response -> {
-            if (!shouldRetryWithClientSecretPost(response.statusCode())) {
-                return CompletableFuture.completedFuture(response);
-            }
-
-            return requestToken(true);
-        }).thenApply(this::parseTokenResponse);
+        return requestToken(false)
+            .thenCompose(response -> {
+                if (!shouldRetryWithClientSecretPost(response.statusCode())) {
+                    return CompletableFuture.completedFuture(response);
+                }
+                return requestToken(true);
+            })
+            .thenApply(this::parseTokenResponse);
     }
-        String credentials = Base64.getEncoder().encodeToString(
-            (clientId + ":" + clientSecret).getBytes(StandardCharsets.UTF_8)
-        );
-        String requestBody = buildRequestBody();
 
     private CompletableFuture<HttpResponse<String>> requestToken(
         boolean includeClientCredentialsInBody
@@ -116,12 +114,11 @@ public class OAuth2TokenService {
         if (response.statusCode() != 200) {
             throw new RuntimeException(
                 "Failed to fetch token: " +
-                response.statusCode() +
-                " - " +
-                response.body()
+                    response.statusCode() +
+                    " - " +
+                    response.body()
             );
         }
-
         JsonObject json = JsonParser.parseString(
             response.body()
         ).getAsJsonObject();
@@ -134,7 +131,6 @@ public class OAuth2TokenService {
         long expiresIn = json.has("expires_in")
             ? json.get("expires_in").getAsLong()
             : 300L;
-
         cachedToken.set(token);
         tokenExpiry = Instant.now().plusSeconds(expiresIn);
         return token;
@@ -151,51 +147,6 @@ public class OAuth2TokenService {
                     URLEncoder.encode(clientSecret, StandardCharsets.UTF_8)
                 );
         }
-        if (scopes != null && !scopes.isBlank()) {
-            body
-                .append("&scope=")
-                .append(URLEncoder.encode(scopes, StandardCharsets.UTF_8));
-        }
-        return body.toString();
-            .header("Authorization", "Basic " + credentials)
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-            .build();
-
-        return http
-            .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-            .thenApply(response -> {
-                if (response.statusCode() != 200) {
-                    throw new RuntimeException(
-                        "Failed to fetch token: " +
-                        response.statusCode() +
-                        " - " +
-                        response.body()
-                    );
-                }
-
-                JsonObject json = JsonParser.parseString(
-                    response.body()
-                ).getAsJsonObject();
-                if (!json.has("access_token")) {
-                    throw new RuntimeException(
-                        "Token response did not contain access_token"
-                    );
-                }
-                String token = json.get("access_token").getAsString();
-                long expiresIn = json.has("expires_in")
-                    ? json.get("expires_in").getAsLong()
-                    : 300L;
-
-                cachedToken.set(token);
-                tokenExpiry = Instant.now().plusSeconds(expiresIn);
-
-                return token;
-            });
-    }
-
-    private String buildRequestBody() {
-        StringBuilder body = new StringBuilder("grant_type=client_credentials");
         if (scopes != null && !scopes.isBlank()) {
             body
                 .append("&scope=")

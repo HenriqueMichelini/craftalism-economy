@@ -61,7 +61,6 @@ processResources {
 
 tasks.register('fatJar', Jar) {
     archiveClassifier.set('')
-jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     from sourceSets.main.output
