@@ -126,7 +126,10 @@ public class BalanceApiService {
     public CompletableFuture<Void> deposit(UUID uuid, long amount) {
         BalanceUpdateRequestDTO dto = new BalanceUpdateRequestDTO(amount);
         return http
-            .post("/api/balances/" + uuid + "/deposit", gson.toJson(dto))
+            .post(
+                "/api/balances/" + uuid + "/deposit?amount=" + amount,
+                gson.toJson(dto)
+            )
             .thenCompose(resp -> {
                 int status = resp.statusCode();
                 String body = resp.body();
@@ -144,7 +147,10 @@ public class BalanceApiService {
     public CompletableFuture<Void> withdraw(UUID uuid, long amount) {
         BalanceUpdateRequestDTO dto = new BalanceUpdateRequestDTO(amount);
         return http
-            .post("/api/balances/" + uuid + "/withdraw", gson.toJson(dto))
+            .post(
+                "/api/balances/" + uuid + "/withdraw?amount=" + amount,
+                gson.toJson(dto)
+            )
             .thenCompose(resp -> {
                 int status = resp.statusCode();
                 String body = resp.body();
