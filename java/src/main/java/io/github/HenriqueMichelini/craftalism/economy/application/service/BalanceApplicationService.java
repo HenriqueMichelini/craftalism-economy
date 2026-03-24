@@ -30,12 +30,18 @@ public class BalanceApplicationService {
     public CompletableFuture<Optional<Balance>> getBalance(UUID uuid) {
         return api
             .getBalance(uuid)
-            .thenApply(dto -> Optional.of(toBalance(dto)))
-            .exceptionally(ex ->
-                isNotFoundException(ex)
-                    ? Optional.empty()
-                    : throwAsCompletion(ex)
-            );
+            .handle((dto, ex) -> {
+                if (ex == null) {
+                    return Optional.of(toBalance(dto));
+                }
+
+                if (isNotFoundException(ex)) {
+                    return Optional.empty();
+                }
+
+                throwAsCompletion(ex);
+                return Optional.empty();
+            });
     }
 
     public CompletableFuture<Balance> getOrCreateBalance(UUID uuid) {
@@ -56,7 +62,7 @@ public class BalanceApplicationService {
                     return api.createBalance(uuid, DEFAULT_VALUE);
                 }
 
-                return CompletableFuture.failedFuture(ex);
+                return CompletableFuture.failedFuture(cause);
             })
             .thenApply(this::toBalance);
     }
