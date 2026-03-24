@@ -47,11 +47,19 @@ public class ConnectionConfig {
         );
     }
 
+    public String getTokenPath() {
+        return connectionConfig.getString("token-path", "/oauth2/token");
+    }
+
     public String getClientId() {
         return connectionConfig.getString("client-id", "minecraft-server");
     }
 
     public String getClientSecret() {
         return connectionConfig.getString("client-secret", "");
+    }
+
+    public String getScopes() {
+        return connectionConfig.getString("scopes", "api:read api:write");
     }
 }

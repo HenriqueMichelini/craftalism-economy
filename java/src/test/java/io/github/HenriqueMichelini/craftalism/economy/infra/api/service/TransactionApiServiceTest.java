@@ -79,7 +79,7 @@ class TransactionApiServiceTest {
             201,
             responseJson
         );
-        when(httpClient.post("/transactions", expectedRequestJson)).thenReturn(
+        when(httpClient.post("/api/transactions", expectedRequestJson)).thenReturn(
             CompletableFuture.completedFuture(mockResponse)
         );
 
@@ -94,7 +94,7 @@ class TransactionApiServiceTest {
         assertEquals(testAmount, result.amount());
         assertEquals(createdAt, result.createdAt());
 
-        verify(httpClient).post("/transactions", expectedRequestJson);
+        verify(httpClient).post("/api/transactions", expectedRequestJson);
     }
 
     @Test
@@ -125,7 +125,7 @@ class TransactionApiServiceTest {
             201,
             responseJson
         );
-        when(httpClient.post("/transactions", expectedRequestJson)).thenReturn(
+        when(httpClient.post("/api/transactions", expectedRequestJson)).thenReturn(
             CompletableFuture.completedFuture(mockResponse)
         );
 
@@ -164,7 +164,7 @@ class TransactionApiServiceTest {
             201,
             responseJson
         );
-        when(httpClient.post("/transactions", expectedRequestJson)).thenReturn(
+        when(httpClient.post("/api/transactions", expectedRequestJson)).thenReturn(
             CompletableFuture.completedFuture(mockResponse)
         );
 
@@ -203,7 +203,7 @@ class TransactionApiServiceTest {
             201,
             responseJson
         );
-        when(httpClient.post("/transactions", expectedRequestJson)).thenReturn(
+        when(httpClient.post("/api/transactions", expectedRequestJson)).thenReturn(
             CompletableFuture.completedFuture(mockResponse)
         );
 
@@ -225,7 +225,7 @@ class TransactionApiServiceTest {
         );
         String expectedRequestJson = gson.toJson(requestDTO);
 
-        when(httpClient.post("/transactions", expectedRequestJson)).thenReturn(
+        when(httpClient.post("/api/transactions", expectedRequestJson)).thenReturn(
             CompletableFuture.failedFuture(
                 new RuntimeException("Database Error")
             )
@@ -258,7 +258,7 @@ class TransactionApiServiceTest {
             201,
             "{invalid json}"
         );
-        when(httpClient.post("/transactions", expectedRequestJson)).thenReturn(
+        when(httpClient.post("/api/transactions", expectedRequestJson)).thenReturn(
             CompletableFuture.completedFuture(mockResponse)
         );
 
@@ -286,7 +286,7 @@ class TransactionApiServiceTest {
             201,
             responseJson
         );
-        when(httpClient.post(eq("/transactions"), anyString())).thenAnswer(
+        when(httpClient.post(eq("/api/transactions"), anyString())).thenAnswer(
             invocation -> {
                 capturedJson[0] = invocation.getArgument(1);
                 return CompletableFuture.completedFuture(mockResponse);
@@ -297,9 +297,9 @@ class TransactionApiServiceTest {
 
         assertNotNull(capturedJson[0]);
         assertTrue(
-            capturedJson[0].contains("\"fromUuid\":\"" + fromUuid + "\"")
+            capturedJson[0].contains("\"fromPlayerUuid\":\"" + fromUuid + "\"")
         );
-        assertTrue(capturedJson[0].contains("\"toUuid\":\"" + toUuid + "\""));
+        assertTrue(capturedJson[0].contains("\"toPlayerUuid\":\"" + toUuid + "\""));
         assertTrue(capturedJson[0].contains("\"amount\":" + testAmount));
     }
 
@@ -319,7 +319,7 @@ class TransactionApiServiceTest {
 
         // Manually construct JSON to ensure exact format
         String responseJson = String.format(
-            "{\"id\":%d,\"fromUuid\":\"%s\",\"toUuid\":\"%s\",\"amount\":%d,\"createdAt\":\"%s\"}",
+            "{\"id\":%d,\"fromPlayerUuid\":\"%s\",\"toPlayerUuid\":\"%s\",\"amount\":%d,\"createdAt\":\"%s\"}",
             expectedId,
             fromUuid,
             toUuid,
@@ -331,7 +331,7 @@ class TransactionApiServiceTest {
             201,
             responseJson
         );
-        when(httpClient.post("/transactions", expectedRequestJson)).thenReturn(
+        when(httpClient.post("/api/transactions", expectedRequestJson)).thenReturn(
             CompletableFuture.completedFuture(mockResponse)
         );
 
@@ -394,10 +394,10 @@ class TransactionApiServiceTest {
         );
 
         when(
-            httpClient.post("/transactions", gson.toJson(request1))
+            httpClient.post("/api/transactions", gson.toJson(request1))
         ).thenReturn(CompletableFuture.completedFuture(mockResponse1));
         when(
-            httpClient.post("/transactions", gson.toJson(request2))
+            httpClient.post("/api/transactions", gson.toJson(request2))
         ).thenReturn(CompletableFuture.completedFuture(mockResponse2));
 
         CompletableFuture<TransactionResponseDTO> future1 = service.register(
@@ -429,7 +429,7 @@ class TransactionApiServiceTest {
             500,
             "Internal Server Error"
         );
-        when(httpClient.post("/transactions", expectedRequestJson)).thenReturn(
+        when(httpClient.post("/api/transactions", expectedRequestJson)).thenReturn(
             CompletableFuture.completedFuture(mockResponse)
         );
 
@@ -448,7 +448,7 @@ class TransactionApiServiceTest {
         );
         String expectedRequestJson = gson.toJson(requestDTO);
 
-        when(httpClient.post("/transactions", expectedRequestJson)).thenReturn(
+        when(httpClient.post("/api/transactions", expectedRequestJson)).thenReturn(
             CompletableFuture.failedFuture(
                 new RuntimeException("Connection timeout")
             )
@@ -485,7 +485,7 @@ class TransactionApiServiceTest {
             201,
             gson.toJson(responseDTO)
         );
-        when(httpClient.post(eq("/transactions"), anyString())).thenAnswer(
+        when(httpClient.post(eq("/api/transactions"), anyString())).thenAnswer(
             invocation -> {
                 capturedJson[0] = invocation.getArgument(1);
                 return CompletableFuture.completedFuture(mockResponse);
@@ -496,8 +496,8 @@ class TransactionApiServiceTest {
 
         String json = capturedJson[0];
         assertNotNull(json);
-        assertTrue(json.contains("fromUuid"));
-        assertTrue(json.contains("toUuid"));
+        assertTrue(json.contains("fromPlayerUuid"));
+        assertTrue(json.contains("toPlayerUuid"));
         assertTrue(json.contains("amount"));
     }
 
@@ -527,7 +527,7 @@ class TransactionApiServiceTest {
             201,
             responseJson
         );
-        when(httpClient.post("/transactions", expectedRequestJson)).thenReturn(
+        when(httpClient.post("/api/transactions", expectedRequestJson)).thenReturn(
             CompletableFuture.completedFuture(mockResponse)
         );
 
