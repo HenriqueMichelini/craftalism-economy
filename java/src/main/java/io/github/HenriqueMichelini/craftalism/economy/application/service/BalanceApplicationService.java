@@ -5,11 +5,11 @@ import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceRespo
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.repository.BalanceCacheRepository;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.BalanceApiService;
-import io.github.HenriqueMichelini.craftalism.economy.infra.config.ConfigLoader;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 
 public class BalanceApplicationService {
 
@@ -30,12 +30,18 @@ public class BalanceApplicationService {
     public CompletableFuture<Optional<Balance>> getBalance(UUID uuid) {
         return api
             .getBalance(uuid)
-            .thenApply(dto -> Optional.of(toBalance(dto)))
-            .exceptionally(ex ->
-                isNotFoundException(ex)
-                    ? Optional.empty()
-                    : throwAsCompletion(ex)
-            );
+            .handle((dto, ex) -> {
+                if (ex == null) {
+                    return Optional.of(toBalance(dto));
+                }
+
+                if (isNotFoundException(ex)) {
+                    return Optional.empty();
+                }
+
+                throwAsCompletion(ex);
+                return Optional.empty();
+            });
     }
 
     public CompletableFuture<Balance> getOrCreateBalance(UUID uuid) {
@@ -56,7 +62,7 @@ public class BalanceApplicationService {
                     return api.createBalance(uuid, DEFAULT_VALUE);
                 }
 
-                return CompletableFuture.failedFuture(ex);
+                return CompletableFuture.failedFuture(cause);
             })
             .thenApply(this::toBalance);
     }
@@ -100,11 +106,24 @@ public class BalanceApplicationService {
     }
 
     private boolean isNotFoundException(Throwable ex) {
-        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-        return cause instanceof NotFoundException;
+        return unwrap(ex) instanceof NotFoundException;
     }
 
-    private <T> T throwAsCompletion(Throwable ex) {
-        throw new CompletionException(ex);
+    private Throwable unwrap(Throwable throwable) {
+        Throwable current = throwable;
+        while (
+            current instanceof CompletionException ||
+            current instanceof ExecutionException
+        ) {
+            if (current.getCause() == null) {
+                break;
+            }
+            current = current.getCause();
+        }
+        return current;
+    }
+
+    private void throwAsCompletion(Throwable ex) {
+        throw new CompletionException(unwrap(ex));
     }
 }
