@@ -17,6 +17,7 @@ import io.github.HenriqueMichelini.craftalism.economy.presentation.listeners.Eve
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class BootContainer {
+
     private final CraftalismEconomy plugin;
     private final JavaPlugin javaPlugin;
 
@@ -52,9 +53,9 @@ public final class BootContainer {
 
         // 3. Formatters
         FormatterFactory formatterFactory = new FormatterFactory(
-                configLoader,
-                plugin,
-                pluginLogger
+            configLoader,
+            plugin,
+            pluginLogger
         );
 
         this.currencyFormatter = formatterFactory.getFormatter();
@@ -68,26 +69,36 @@ public final class BootContainer {
         this.transactionApiService = apiFactory.getTransactionApi();
 
         // 5. Application Services
-        ApplicationServiceFactory appFactory = new ApplicationServiceFactory(javaPlugin, apiFactory);
+        ConfigLoader config = new ConfigLoader(plugin);
+        long DEFAULT_VALUE = config.defaultBalance();
+        ApplicationServiceFactory appFactory = new ApplicationServiceFactory(
+            javaPlugin,
+            apiFactory,
+            DEFAULT_VALUE
+        );
 
         this.playerApplicationService = appFactory.getPlayerApplication();
-        this.payCommandApplicationService = appFactory.getPayCommandApplication();
+        this.payCommandApplicationService =
+            appFactory.getPayCommandApplication();
         this.balanceApplicationService = appFactory.getBalanceApplication();
-        this.balanceCommandApplicationService = appFactory.getBalanceCommandApplication();
-        this.baltopCommandApplicationService = appFactory.getBaltopCommandApplication();
-        this.setBalanceCommandApplicationService = appFactory.setBalanceCommandApplication();
+        this.balanceCommandApplicationService =
+            appFactory.getBalanceCommandApplication();
+        this.baltopCommandApplicationService =
+            appFactory.getBaltopCommandApplication();
+        this.setBalanceCommandApplicationService =
+            appFactory.setBalanceCommandApplication();
 
         // 6. Command registration
         new CommandRegistrar(
-                plugin,
-                appFactory,
-                formatterFactory
+            plugin,
+            appFactory,
+            formatterFactory
         ).registerAll();
 
         new EventRegistrar(
-                plugin,
-                playerApplicationService,
-                balanceApplicationService
+            plugin,
+            playerApplicationService,
+            balanceApplicationService
         ).registerAll();
     }
 
@@ -95,7 +106,15 @@ public final class BootContainer {
         // flush caches, send pending balances, etc
     }
 
-    public CurrencyFormatter getCurrencyFormatter() { return currencyFormatter; }
-    public CurrencyParser getCurrencyParser() { return currencyParser; }
-    public PluginLogger getPluginLogger() { return pluginLogger; }
+    public CurrencyFormatter getCurrencyFormatter() {
+        return currencyFormatter;
+    }
+
+    public CurrencyParser getCurrencyParser() {
+        return currencyParser;
+    }
+
+    public PluginLogger getPluginLogger() {
+        return pluginLogger;
+    }
 }

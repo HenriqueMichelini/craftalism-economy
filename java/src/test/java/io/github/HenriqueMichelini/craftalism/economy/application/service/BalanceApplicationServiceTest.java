@@ -1,28 +1,30 @@
 package io.github.HenriqueMichelini.craftalism.economy.application.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import io.github.HenriqueMichelini.craftalism.economy.domain.model.Balance;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceResponseDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.repository.BalanceCacheRepository;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.BalanceApiService;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 class BalanceApplicationServiceTest {
+
+    private static final long DEFAULT_BALANCE = 100_000_000L;
 
     @Mock
     private BalanceApiService api;
+
     @Mock
     private BalanceCacheRepository cache;
 
@@ -35,8 +37,7 @@ class BalanceApplicationServiceTest {
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-
-        service = new BalanceApplicationService(api, cache);
+        service = new BalanceApplicationService(api, cache, DEFAULT_BALANCE);
     }
 
     @AfterEach
@@ -50,8 +51,9 @@ class BalanceApplicationServiceTest {
     void getBalance_ShouldReturnBalance_WhenFound() {
         Long amount = 1500000L;
         BalanceResponseDTO dto = new BalanceResponseDTO(playerUuid, amount);
-        when(api.getBalance(playerUuid))
-                .thenReturn(CompletableFuture.completedFuture(dto));
+        when(api.getBalance(playerUuid)).thenReturn(
+            CompletableFuture.completedFuture(dto)
+        );
 
         Optional<Balance> result = service.getBalance(playerUuid).join();
 
@@ -62,8 +64,9 @@ class BalanceApplicationServiceTest {
 
     @Test
     void getBalance_ShouldReturnEmpty_WhenNotFound() {
-        when(api.getBalance(playerUuid))
-                .thenReturn(CompletableFuture.failedFuture(new NotFoundException("Not found")));
+        when(api.getBalance(playerUuid)).thenReturn(
+            CompletableFuture.failedFuture(new NotFoundException("Not found"))
+        );
 
         Optional<Balance> result = service.getBalance(playerUuid).join();
 
@@ -72,24 +75,28 @@ class BalanceApplicationServiceTest {
 
     @Test
     void getBalance_ShouldThrowException_WhenOtherErrorOccurs() {
-        when(api.getBalance(playerUuid))
-                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("API Error")));
+        when(api.getBalance(playerUuid)).thenReturn(
+            CompletableFuture.failedFuture(new RuntimeException("API Error"))
+        );
 
-        assertThrows(Exception.class, () -> service.getBalance(playerUuid).join());
+        assertThrows(Exception.class, () ->
+            service.getBalance(playerUuid).join()
+        );
     }
 
     @Test
     void getOrCreateBalance_ShouldReturnExisting_WhenBalanceExists() {
         Long amount = 2000000L;
         BalanceResponseDTO dto = new BalanceResponseDTO(playerUuid, amount);
-        when(api.getBalance(playerUuid))
-                .thenReturn(CompletableFuture.completedFuture(dto));
+        when(api.getBalance(playerUuid)).thenReturn(
+            CompletableFuture.completedFuture(dto)
+        );
 
         Balance result = service.getOrCreateBalance(playerUuid).join();
 
         assertEquals(playerUuid, result.getUuid());
         assertEquals(amount, result.getAmount());
-        verify(api, never()).createBalance(any());
+        verify(api, never()).createBalance(any(UUID.class), anyLong());
     }
 
     @Test
@@ -97,24 +104,27 @@ class BalanceApplicationServiceTest {
         Long amount = 0L;
         BalanceResponseDTO dto = new BalanceResponseDTO(playerUuid, amount);
 
-        when(api.getBalance(playerUuid))
-                .thenReturn(CompletableFuture.failedFuture(new NotFoundException("Not found")));
-        when(api.createBalance(playerUuid))
-                .thenReturn(CompletableFuture.completedFuture(dto));
+        when(api.getBalance(playerUuid)).thenReturn(
+            CompletableFuture.failedFuture(new NotFoundException("Not found"))
+        );
+        when(api.createBalance(playerUuid, DEFAULT_BALANCE)).thenReturn(
+            CompletableFuture.completedFuture(dto)
+        );
 
         Balance result = service.getOrCreateBalance(playerUuid).join();
 
         assertEquals(playerUuid, result.getUuid());
         assertEquals(amount, result.getAmount());
-        verify(api).createBalance(playerUuid);
+        verify(api).createBalance(playerUuid, DEFAULT_BALANCE);
     }
 
     @Test
     void loadBalanceOnJoin_ShouldCacheBalance_WhenLoaded() {
         Long amount = 3000000L;
         BalanceResponseDTO dto = new BalanceResponseDTO(playerUuid, amount);
-        when(api.getBalance(playerUuid))
-                .thenReturn(CompletableFuture.completedFuture(dto));
+        when(api.getBalance(playerUuid)).thenReturn(
+            CompletableFuture.completedFuture(dto)
+        );
 
         Balance result = service.loadBalanceOnJoin(playerUuid).join();
 
@@ -126,8 +136,9 @@ class BalanceApplicationServiceTest {
     void syncBalance_ShouldUpdateCache_WhenSynced() {
         Long amount = 4500000L;
         BalanceResponseDTO dto = new BalanceResponseDTO(playerUuid, amount);
-        when(api.getBalance(playerUuid))
-                .thenReturn(CompletableFuture.completedFuture(dto));
+        when(api.getBalance(playerUuid)).thenReturn(
+            CompletableFuture.completedFuture(dto)
+        );
 
         Balance result = service.syncBalance(playerUuid).join();
 
@@ -153,8 +164,9 @@ class BalanceApplicationServiceTest {
         BalanceResponseDTO dto = new BalanceResponseDTO(playerUuid, amount);
 
         when(cache.find(playerUuid)).thenReturn(Optional.empty());
-        when(api.getBalance(playerUuid))
-                .thenReturn(CompletableFuture.completedFuture(dto));
+        when(api.getBalance(playerUuid)).thenReturn(
+            CompletableFuture.completedFuture(dto)
+        );
 
         Balance result = service.getCachedOrFetch(playerUuid).join();
 

@@ -5,7 +5,7 @@ import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceRespo
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.repository.BalanceCacheRepository;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.BalanceApiService;
-
+import io.github.HenriqueMichelini.craftalism.economy.infra.config.ConfigLoader;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -15,71 +15,84 @@ public class BalanceApplicationService {
 
     private final BalanceApiService api;
     private final BalanceCacheRepository cache;
+    private final long DEFAULT_VALUE;
 
-    public BalanceApplicationService(BalanceApiService api, BalanceCacheRepository cache) {
+    public BalanceApplicationService(
+        BalanceApiService api,
+        BalanceCacheRepository cache,
+        long DEFAULT_VALUE
+    ) {
         this.api = api;
         this.cache = cache;
+        this.DEFAULT_VALUE = DEFAULT_VALUE;
     }
 
     public CompletableFuture<Optional<Balance>> getBalance(UUID uuid) {
-        return api.getBalance(uuid)
-                .thenApply(dto -> Optional.of(toBalance(dto)))
-                .exceptionally(ex ->
-                        isNotFoundException(ex)
-                                ? Optional.empty()
-                                : throwAsCompletion(ex)
-                );
+        return api
+            .getBalance(uuid)
+            .thenApply(dto -> Optional.of(toBalance(dto)))
+            .exceptionally(ex ->
+                isNotFoundException(ex)
+                    ? Optional.empty()
+                    : throwAsCompletion(ex)
+            );
     }
 
     public CompletableFuture<Balance> getOrCreateBalance(UUID uuid) {
-        return api.getBalance(uuid)
-                .exceptionallyCompose(ex -> {
+        return api
+            .getBalance(uuid)
+            .exceptionallyCompose(ex -> {
+                Throwable cause = ex;
+                while (
+                    cause.getCause() != null &&
+                    (cause instanceof CompletionException ||
+                        cause instanceof
+                            java.util.concurrent.ExecutionException)
+                ) {
+                    cause = cause.getCause();
+                }
 
-                    Throwable cause = ex;
-                    while (cause.getCause() != null &&
-                            (cause instanceof CompletionException || cause instanceof java.util.concurrent.ExecutionException)) {
-                        cause = cause.getCause();
-                    }
+                if (cause instanceof NotFoundException) {
+                    return api.createBalance(uuid, DEFAULT_VALUE);
+                }
 
-                    if (cause instanceof NotFoundException) {
-                        return api.createBalance(uuid);
-                    }
-
-                    return CompletableFuture.failedFuture(ex);
-                })
-                .thenApply(this::toBalance);
+                return CompletableFuture.failedFuture(ex);
+            })
+            .thenApply(this::toBalance);
     }
 
     public CompletableFuture<Balance> loadBalanceOnJoin(UUID uuid) {
-        return getOrCreateBalance(uuid)
-                .thenApply(balance -> {
-                    cache.save(balance);
-                    return balance;
-                });
+        return getOrCreateBalance(uuid).thenApply(balance -> {
+            cache.save(balance);
+            return balance;
+        });
     }
 
     public CompletableFuture<Balance> syncBalance(UUID uuid) {
-        return api.getBalance(uuid)
-                .thenApply(dto -> {
-                    Balance balance = toBalance(dto);
-                    cache.save(balance);
-                    return balance;
-                });
+        return api
+            .getBalance(uuid)
+            .thenApply(dto -> {
+                Balance balance = toBalance(dto);
+                cache.save(balance);
+                return balance;
+            });
     }
 
     public CompletableFuture<Balance> getCachedOrFetch(UUID uuid) {
-        return cache.find(uuid)
-                .map(CompletableFuture::completedFuture)
-                .orElseGet(() -> loadBalanceOnJoin(uuid));
+        return cache
+            .find(uuid)
+            .map(CompletableFuture::completedFuture)
+            .orElseGet(() -> loadBalanceOnJoin(uuid));
     }
 
     public CompletableFuture<Balance> updateBalance(UUID uuid, Long amount) {
-        return api.updateBalance(uuid, amount)
-                .thenApply(dto -> {
-                    Balance balance = toBalance(dto);
-                    cache.save(balance);
-                    return balance;
-                });
+        return api
+            .updateBalance(uuid, amount)
+            .thenApply(dto -> {
+                Balance balance = toBalance(dto);
+                cache.save(balance);
+                return balance;
+            });
     }
 
     private Balance toBalance(BalanceResponseDTO dto) {

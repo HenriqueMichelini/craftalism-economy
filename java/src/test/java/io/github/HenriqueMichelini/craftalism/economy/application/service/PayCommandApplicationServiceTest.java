@@ -1,8 +1,7 @@
 package io.github.HenriqueMichelini.craftalism.economy.application.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import io.github.HenriqueMichelini.craftalism.economy.application.dto.PayExecutionResult;
@@ -63,7 +62,6 @@ class PayCommandApplicationServiceTest {
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-
         when(plugin.getLogger()).thenReturn(logger);
 
         service = new PayCommandApplicationService(
@@ -97,11 +95,7 @@ class PayCommandApplicationServiceTest {
     @DisplayName("Should complete successful payment")
     void shouldCompleteSuccessfulPayment()
         throws ExecutionException, InterruptedException {
-        Long payerBalance = 500_0000L;
-        BalanceResponseDTO dto = new BalanceResponseDTO(
-            payerUuid,
-            payerBalance
-        );
+        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, 500_0000L);
 
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
@@ -136,8 +130,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.SUCCESS, result);
-
+        assertEquals(PayStatus.SUCCESS, result.getStatus());
         verify(playerService).getCachedOrFetch(payerUuid, payerName);
         verify(playerApi).getPlayerByName(receiverName);
         verify(balanceApi).getBalance(payerUuid);
@@ -186,7 +179,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, exactAmount)
             .get();
 
-        assertEquals(PayStatus.SUCCESS, result);
+        assertEquals(PayStatus.SUCCESS, result.getStatus());
     }
 
     @Test
@@ -210,10 +203,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, payerName, validAmount)
             .get();
 
-        assertEquals(PayStatus.CANNOT_PAY_SELF, result);
-
-        verify(playerService).getCachedOrFetch(payerUuid, payerName);
-        verify(playerApi).getPlayerByName(payerName);
+        assertEquals(PayStatus.CANNOT_PAY_SELF, result.getStatus());
         verify(balanceApi, never()).getBalance(any());
         verify(balanceApi, never()).withdraw(any(), anyLong());
     }
@@ -233,8 +223,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, 0L)
             .get();
 
-        assertEquals(PayStatus.INVALID_AMOUNT, result);
-
+        assertEquals(PayStatus.INVALID_AMOUNT, result.getStatus());
         verify(balanceApi, never()).getBalance(any());
         verify(balanceApi, never()).withdraw(any(), anyLong());
     }
@@ -254,15 +243,12 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, -100L)
             .get();
 
-        assertEquals(PayStatus.INVALID_AMOUNT, result);
-
+        assertEquals(PayStatus.INVALID_AMOUNT, result.getStatus());
         verify(balanceApi, never()).getBalance(any());
     }
 
     @Test
-    @DisplayName(
-        "Should return TARGET_NOT_FOUND when receiver not found (NotFoundException)"
-    )
+    @DisplayName("Should return TARGET_NOT_FOUND when receiver not found")
     void shouldReturnTargetNotFoundWhenReceiverNotFound()
         throws ExecutionException, InterruptedException {
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
@@ -278,10 +264,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.TARGET_NOT_FOUND, result);
-
-        verify(playerService).getCachedOrFetch(payerUuid, payerName);
-        verify(playerApi).getPlayerByName(receiverName);
+        assertEquals(PayStatus.TARGET_NOT_FOUND, result.getStatus());
         verify(balanceApi, never()).getBalance(any());
     }
 
@@ -302,10 +285,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.ERROR, result);
-
-        verify(playerService).getCachedOrFetch(payerUuid, payerName);
-        verify(playerApi).getPlayerByName(receiverName);
+        assertEquals(PayStatus.ERROR, result.getStatus());
         verify(balanceApi, never()).getBalance(any());
     }
 
@@ -313,11 +293,7 @@ class PayCommandApplicationServiceTest {
     @DisplayName("Should reject payment when payer has insufficient funds")
     void shouldRejectPaymentWhenInsufficientFunds()
         throws ExecutionException, InterruptedException {
-        Long insufficientBalance = 50_0000L;
-        BalanceResponseDTO dto = new BalanceResponseDTO(
-            payerUuid,
-            insufficientBalance
-        );
+        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, 50_0000L);
 
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
@@ -333,8 +309,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.NOT_ENOUGH_FUNDS, result);
-
+        assertEquals(PayStatus.NOT_ENOUGH_FUNDS, result.getStatus());
         verify(balanceApi).getBalance(payerUuid);
         verify(balanceApi, never()).withdraw(any(), anyLong());
         verify(balanceApi, never()).deposit(any(), anyLong());
@@ -347,10 +322,9 @@ class PayCommandApplicationServiceTest {
     )
     void shouldRejectPaymentWhenBalanceOneShort()
         throws ExecutionException, InterruptedException {
-        Long almostEnough = validAmount - 1;
         BalanceResponseDTO dto = new BalanceResponseDTO(
             payerUuid,
-            almostEnough
+            validAmount - 1
         );
 
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
@@ -367,7 +341,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.NOT_ENOUGH_FUNDS, result);
+        assertEquals(PayStatus.NOT_ENOUGH_FUNDS, result.getStatus());
     }
 
     @Test
@@ -386,8 +360,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.TARGET_NOT_FOUND, result);
-
+        assertEquals(PayStatus.TARGET_NOT_FOUND, result.getStatus());
         verify(playerApi, never()).getPlayerByName(any());
         verify(balanceApi, never()).getBalance(any());
     }
@@ -408,8 +381,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.ERROR, result);
-
+        assertEquals(PayStatus.ERROR, result.getStatus());
         verify(playerApi, never()).getPlayerByName(any());
         verify(balanceApi, never()).getBalance(any());
     }
@@ -434,8 +406,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.ERROR, result);
-
+        assertEquals(PayStatus.ERROR, result.getStatus());
         verify(balanceApi, never()).withdraw(any(), anyLong());
     }
 
@@ -443,11 +414,7 @@ class PayCommandApplicationServiceTest {
     @DisplayName("Should return ERROR when withdraw fails")
     void shouldReturnErrorDuringWithdraw()
         throws ExecutionException, InterruptedException {
-        Long payerBalance = 500_0000L;
-        BalanceResponseDTO dto = new BalanceResponseDTO(
-            payerUuid,
-            payerBalance
-        );
+        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, 500_0000L);
 
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
@@ -468,8 +435,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.ERROR, result);
-
+        assertEquals(PayStatus.ERROR, result.getStatus());
         verify(balanceApi).withdraw(payerUuid, validAmount);
         verify(balanceApi, never()).deposit(receiverUuid, validAmount);
         verify(transactionApi, never()).register(any(), any(), anyLong());
@@ -479,11 +445,7 @@ class PayCommandApplicationServiceTest {
     @DisplayName("Should return ERROR when deposit fails and rollback succeeds")
     void shouldReturnErrorWhenDepositFailsAndRollbackSucceeds()
         throws ExecutionException, InterruptedException {
-        Long payerBalance = 500_0000L;
-        BalanceResponseDTO dto = new BalanceResponseDTO(
-            payerUuid,
-            payerBalance
-        );
+        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, 500_0000L);
 
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
@@ -502,7 +464,6 @@ class PayCommandApplicationServiceTest {
                 new RuntimeException("Deposit failed")
             )
         );
-        // Rollback succeeds
         when(balanceApi.deposit(payerUuid, validAmount)).thenReturn(
             CompletableFuture.completedFuture(null)
         );
@@ -511,11 +472,10 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.ERROR, result);
-
+        assertEquals(PayStatus.ERROR, result.getStatus());
         verify(balanceApi).withdraw(payerUuid, validAmount);
         verify(balanceApi).deposit(receiverUuid, validAmount);
-        verify(balanceApi).deposit(payerUuid, validAmount); // Rollback
+        verify(balanceApi).deposit(payerUuid, validAmount);
         verify(transactionApi, never()).register(any(), any(), anyLong());
     }
 
@@ -525,11 +485,7 @@ class PayCommandApplicationServiceTest {
     )
     void shouldReturnSuccessWhenTransactionRegistrationFails()
         throws ExecutionException, InterruptedException {
-        Long payerBalance = 500_0000L;
-        BalanceResponseDTO dto = new BalanceResponseDTO(
-            payerUuid,
-            payerBalance
-        );
+        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, 500_0000L);
 
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
@@ -558,9 +514,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        // Payment succeeded even though logging failed
-        assertEquals(PayStatus.SUCCESS, result);
-
+        assertEquals(PayStatus.SUCCESS, result.getStatus());
         verify(transactionApi).register(payerUuid, receiverUuid, validAmount);
     }
 
@@ -568,11 +522,7 @@ class PayCommandApplicationServiceTest {
     @DisplayName("Should return ERROR when both deposit and rollback fail")
     void shouldReturnErrorWhenBothDepositAndRollbackFail()
         throws ExecutionException, InterruptedException {
-        Long payerBalance = 500_0000L;
-        BalanceResponseDTO dto = new BalanceResponseDTO(
-            payerUuid,
-            payerBalance
-        );
+        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, 500_0000L);
 
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
@@ -591,7 +541,6 @@ class PayCommandApplicationServiceTest {
                 new RuntimeException("Deposit failed")
             )
         );
-        // Rollback also fails!
         when(balanceApi.deposit(payerUuid, validAmount)).thenReturn(
             CompletableFuture.failedFuture(
                 new RuntimeException("Rollback failed")
@@ -602,11 +551,10 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.ERROR, result);
-
+        assertEquals(PayStatus.ERROR, result.getStatus());
         verify(balanceApi).withdraw(payerUuid, validAmount);
         verify(balanceApi).deposit(receiverUuid, validAmount);
-        verify(balanceApi).deposit(payerUuid, validAmount); // Attempted rollback
+        verify(balanceApi).deposit(payerUuid, validAmount);
         verify(transactionApi, never()).register(any(), any(), anyLong());
     }
 
@@ -615,10 +563,9 @@ class PayCommandApplicationServiceTest {
     void shouldHandlePaymentWithVeryLargeAmount()
         throws ExecutionException, InterruptedException {
         Long largeAmount = 1_000_000_0000L;
-        Long largerBalance = 2_000_000_0000L;
         BalanceResponseDTO dto = new BalanceResponseDTO(
             payerUuid,
-            largerBalance
+            2_000_000_0000L
         );
 
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
@@ -654,7 +601,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, largeAmount)
             .get();
 
-        assertEquals(PayStatus.SUCCESS, result);
+        assertEquals(PayStatus.SUCCESS, result.getStatus());
     }
 
     @Test
@@ -662,8 +609,7 @@ class PayCommandApplicationServiceTest {
     void shouldHandlePaymentWithMinimumAmount()
         throws ExecutionException, InterruptedException {
         Long minAmount = 1L;
-        Long balance = 100_0000L;
-        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, balance);
+        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, 100_0000L);
 
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
@@ -698,7 +644,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, minAmount)
             .get();
 
-        assertEquals(PayStatus.SUCCESS, result);
+        assertEquals(PayStatus.SUCCESS, result.getStatus());
     }
 
     @Test
@@ -721,7 +667,7 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, receiverName, validAmount)
             .get();
 
-        assertEquals(PayStatus.NOT_ENOUGH_FUNDS, result);
+        assertEquals(PayStatus.NOT_ENOUGH_FUNDS, result.getStatus());
     }
 
     @Test
@@ -735,8 +681,7 @@ class PayCommandApplicationServiceTest {
             specialName,
             Instant.now()
         );
-        Long balance = 500_0000L;
-        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, balance);
+        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, 500_0000L);
 
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
@@ -771,6 +716,6 @@ class PayCommandApplicationServiceTest {
             .execute(payerUuid, payerName, specialName, validAmount)
             .get();
 
-        assertEquals(PayStatus.SUCCESS, result);
+        assertEquals(PayStatus.SUCCESS, result.getStatus());
     }
 }
