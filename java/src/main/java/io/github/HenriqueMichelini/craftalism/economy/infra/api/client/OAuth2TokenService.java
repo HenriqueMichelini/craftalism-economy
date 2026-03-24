@@ -69,13 +69,94 @@ public class OAuth2TokenService {
     }
 
     private CompletableFuture<String> fetchNewToken() {
+        return requestToken(false).thenCompose(response -> {
+            if (!shouldRetryWithClientSecretPost(response.statusCode())) {
+                return CompletableFuture.completedFuture(response);
+            }
+
+            return requestToken(true);
+        }).thenApply(this::parseTokenResponse);
+    }
         String credentials = Base64.getEncoder().encodeToString(
             (clientId + ":" + clientSecret).getBytes(StandardCharsets.UTF_8)
         );
         String requestBody = buildRequestBody();
 
-        HttpRequest request = HttpRequest.newBuilder()
+    private CompletableFuture<HttpResponse<String>> requestToken(
+        boolean includeClientCredentialsInBody
+    ) {
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
             .uri(URI.create(tokenUrl))
+            .header("Content-Type", "application/x-www-form-urlencoded");
+
+        if (!includeClientCredentialsInBody) {
+            String credentials = Base64.getEncoder().encodeToString(
+                (clientId + ":" + clientSecret).getBytes(StandardCharsets.UTF_8)
+            );
+            requestBuilder.header("Authorization", "Basic " + credentials);
+        }
+
+        return http.sendAsync(
+            requestBuilder
+                .POST(
+                    HttpRequest.BodyPublishers.ofString(
+                        buildRequestBody(includeClientCredentialsInBody)
+                    )
+                )
+                .build(),
+            HttpResponse.BodyHandlers.ofString()
+        );
+    }
+
+    private boolean shouldRetryWithClientSecretPost(int statusCode) {
+        return statusCode == 400 || statusCode == 401 || statusCode == 403;
+    }
+
+    private String parseTokenResponse(HttpResponse<String> response) {
+        if (response.statusCode() != 200) {
+            throw new RuntimeException(
+                "Failed to fetch token: " +
+                response.statusCode() +
+                " - " +
+                response.body()
+            );
+        }
+
+        JsonObject json = JsonParser.parseString(
+            response.body()
+        ).getAsJsonObject();
+        if (!json.has("access_token")) {
+            throw new RuntimeException(
+                "Token response did not contain access_token"
+            );
+        }
+        String token = json.get("access_token").getAsString();
+        long expiresIn = json.has("expires_in")
+            ? json.get("expires_in").getAsLong()
+            : 300L;
+
+        cachedToken.set(token);
+        tokenExpiry = Instant.now().plusSeconds(expiresIn);
+        return token;
+    }
+
+    private String buildRequestBody(boolean includeClientCredentialsInBody) {
+        StringBuilder body = new StringBuilder("grant_type=client_credentials");
+        if (includeClientCredentialsInBody) {
+            body
+                .append("&client_id=")
+                .append(URLEncoder.encode(clientId, StandardCharsets.UTF_8))
+                .append("&client_secret=")
+                .append(
+                    URLEncoder.encode(clientSecret, StandardCharsets.UTF_8)
+                );
+        }
+        if (scopes != null && !scopes.isBlank()) {
+            body
+                .append("&scope=")
+                .append(URLEncoder.encode(scopes, StandardCharsets.UTF_8));
+        }
+        return body.toString();
             .header("Authorization", "Basic " + credentials)
             .header("Content-Type", "application/x-www-form-urlencoded")
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))

@@ -86,7 +86,9 @@ public final class ConfigLoader {
     }
 
     public String clientSecret() {
-        String env = System.getenv("CRAFTALISM_API_KEY");
+        String env = System.getenv("MINECRAFT_CLIENT_SECRET");
+        if (env != null && !env.isBlank()) return env;
+        env = System.getenv("CRAFTALISM_API_KEY");
         if (env != null && !env.isBlank()) return env;
         return new ConnectionConfig(plugin).getClientSecret();
     }

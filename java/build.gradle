@@ -59,6 +59,8 @@ processResources {
     }
 }
 
+tasks.register('fatJar', Jar) {
+    archiveClassifier.set('')
 jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -76,3 +78,5 @@ jar {
     exclude 'org/junit/**'
     exclude 'org/mockito/**'
 }
+
+assemble.dependsOn tasks.named('fatJar')
