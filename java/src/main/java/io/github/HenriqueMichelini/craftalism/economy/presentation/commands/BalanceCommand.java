@@ -82,9 +82,7 @@ public class BalanceCommand implements CommandExecutor {
     }
 
     private void handleResult(Player sender, BalanceExecutionResult result, String targetName) {
-        String formattedAmount = result.amount() == null
-                ? "0"
-                : String.valueOf(result.amount());
+        String formattedAmount = formatAmount(result.amount());
         switch (result.status()) {
             case SUCCESS_SELF ->
                     messages.sendBalanceSelfSuccess(sender, formattedAmount);
@@ -101,5 +99,14 @@ public class BalanceCommand implements CommandExecutor {
             default ->
                     messages.sendBalanceError(sender);
         }
+    }
+
+    private String formatAmount(Long amount) {
+        if (amount == null) {
+            return "0";
+        }
+
+        String formatted = formatter.formatCurrency(amount);
+        return formatted != null ? formatted : String.valueOf(amount);
     }
 }

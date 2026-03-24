@@ -123,7 +123,7 @@ public class BalanceApplicationService {
         return current;
     }
 
-    private void throwAsCompletion(Throwable ex) {
+    private <T> T throwAsCompletion(Throwable ex) {
         throw new CompletionException(unwrap(ex));
     }
 }
