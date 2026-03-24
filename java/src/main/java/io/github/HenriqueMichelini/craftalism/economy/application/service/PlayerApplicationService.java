@@ -73,19 +73,13 @@ public class PlayerApplicationService {
 
     public CompletableFuture<PlayerResponseDTO> getOrCreatePlayer(UUID uuid, String name) {
         return api.getPlayerByUuid(uuid)
-                .handle((player, ex) -> {
-                    if (ex == null) {
-                        return CompletableFuture.completedFuture(player);
-                    }
-
+                .exceptionallyCompose(ex -> {
                     Throwable cause = unwrap(ex);
                     if (cause instanceof NotFoundException || cause instanceof ApiServerException) {
                         return api.createPlayer(uuid, name);
                     }
-
-                    return CompletableFuture.<PlayerResponseDTO>failedFuture(cause);
-                })
-                .thenCompose(future -> future);
+                    return CompletableFuture.failedFuture(cause);
+                });
     }
 
     public CompletableFuture<Player> getCachedOrFetch(UUID uuid, String name) {
