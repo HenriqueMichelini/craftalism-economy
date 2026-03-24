@@ -82,12 +82,15 @@ public class BalanceCommand implements CommandExecutor {
     }
 
     private void handleResult(Player sender, BalanceExecutionResult result, String targetName) {
+        String formattedAmount = result.amount() == null
+                ? "0"
+                : String.valueOf(result.amount());
         switch (result.status()) {
             case SUCCESS_SELF ->
-                    messages.sendBalanceSelfSuccess(sender, formatter.formatCurrency(result.amount()));
+                    messages.sendBalanceSelfSuccess(sender, formattedAmount);
 
             case SUCCESS_OTHER ->
-                    messages.sendBalanceOtherSuccess(sender, targetName, formatter.formatCurrency(result.amount()));
+                    messages.sendBalanceOtherSuccess(sender, targetName, formattedAmount);
 
             case NO_BALANCE ->
                     messages.sendBalanceOtherNoBalance(sender, targetName);

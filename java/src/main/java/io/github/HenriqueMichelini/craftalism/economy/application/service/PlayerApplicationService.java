@@ -10,6 +10,8 @@ import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.PlayerAp
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 
 public class PlayerApplicationService {
     private final PlayerApiService api;
@@ -71,12 +73,19 @@ public class PlayerApplicationService {
 
     public CompletableFuture<PlayerResponseDTO> getOrCreatePlayer(UUID uuid, String name) {
         return api.getPlayerByUuid(uuid)
-                .exceptionallyCompose(ex -> {
-                    if (ex instanceof NotFoundException || ex instanceof ApiServerException) {
+                .handle((player, ex) -> {
+                    if (ex == null) {
+                        return CompletableFuture.completedFuture(player);
+                    }
+
+                    Throwable cause = unwrap(ex);
+                    if (cause instanceof NotFoundException || cause instanceof ApiServerException) {
                         return api.createPlayer(uuid, name);
                     }
-                    return CompletableFuture.failedFuture(ex);
-                });
+
+                    return CompletableFuture.<PlayerResponseDTO>failedFuture(cause);
+                })
+                .thenCompose(future -> future);
     }
 
     public CompletableFuture<Player> getCachedOrFetch(UUID uuid, String name) {
@@ -91,5 +100,16 @@ public class PlayerApplicationService {
                     cache.save(player);
                     return player;
                 });
+    }
+
+    private Throwable unwrap(Throwable throwable) {
+        Throwable current = throwable;
+        while (current instanceof CompletionException || current instanceof ExecutionException) {
+            if (current.getCause() == null) {
+                break;
+            }
+            current = current.getCause();
+        }
+        return current;
     }
 }
