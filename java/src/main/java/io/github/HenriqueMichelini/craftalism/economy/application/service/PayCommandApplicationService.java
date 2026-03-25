@@ -106,11 +106,23 @@ public class PayCommandApplicationService {
     }
 
     private CompletableFuture<PayExecutionResult> performTransfer(UUID payerUuid, UUID receiverUuid, long amount) {
-        return withdrawFromPayer(payerUuid, amount)
-                .thenCompose(v -> depositToReceiver(payerUuid, receiverUuid, amount))
-                .thenCompose(v -> logTransaction(payerUuid, receiverUuid, amount))
+        return executeBalanceTransfer(payerUuid, receiverUuid, amount)
+                .thenCompose(v -> logTransactionBestEffort(payerUuid, receiverUuid, amount))
                 .thenApply(v -> PayExecutionResult.success(receiverUuid))
                 .exceptionally(ex -> handleTransferException(ex, "transfer"));
+    }
+
+    /**
+     * Plugin-side source of truth for transfer execution.
+     * The transfer is always performed as:
+     * 1) Withdraw from payer
+     * 2) Deposit to receiver
+     *
+     * Any failure in step 2 triggers rollback logic.
+     */
+    private CompletableFuture<Void> executeBalanceTransfer(UUID payerUuid, UUID receiverUuid, long amount) {
+        return withdrawFromPayer(payerUuid, amount)
+                .thenCompose(v -> depositToReceiver(payerUuid, receiverUuid, amount));
     }
 
     private CompletableFuture<Void> withdrawFromPayer(UUID payerUuid, long amount) {
@@ -189,7 +201,11 @@ public class PayCommandApplicationService {
         };
     }
 
-    private CompletableFuture<Void> logTransaction(UUID payerUuid, UUID receiverUuid, long amount) {
+    /**
+     * Best-effort persistence/audit log.
+     * Logging failures must not rollback an already completed transfer.
+     */
+    private CompletableFuture<Void> logTransactionBestEffort(UUID payerUuid, UUID receiverUuid, long amount) {
         return transactionApi.register(payerUuid, receiverUuid, amount)
                 .thenApply(transaction -> (Void) null)  // Convert to Void
                 .exceptionally(ex -> {
