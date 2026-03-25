@@ -23,6 +23,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -134,9 +135,10 @@ class PayCommandApplicationServiceTest {
         verify(playerService).getCachedOrFetch(payerUuid, payerName);
         verify(playerApi).getPlayerByName(receiverName);
         verify(balanceApi).getBalance(payerUuid);
-        verify(balanceApi).withdraw(payerUuid, validAmount);
-        verify(balanceApi).deposit(receiverUuid, validAmount);
-        verify(transactionApi).register(payerUuid, receiverUuid, validAmount);
+        InOrder transferFlowOrder = inOrder(balanceApi, transactionApi);
+        transferFlowOrder.verify(balanceApi).withdraw(payerUuid, validAmount);
+        transferFlowOrder.verify(balanceApi).deposit(receiverUuid, validAmount);
+        transferFlowOrder.verify(transactionApi).register(payerUuid, receiverUuid, validAmount);
     }
 
     @Test
@@ -516,6 +518,7 @@ class PayCommandApplicationServiceTest {
 
         assertEquals(PayStatus.SUCCESS, result.getStatus());
         verify(transactionApi).register(payerUuid, receiverUuid, validAmount);
+        verify(balanceApi, never()).deposit(payerUuid, validAmount);
     }
 
     @Test
