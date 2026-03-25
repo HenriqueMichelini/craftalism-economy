@@ -170,7 +170,7 @@ public class PayCommandApplicationService {
             Throwable depositEx,
             Throwable rollbackEx
     ) {
-        Throwable unwrapped = unwrapException(rollbackEx);
+        Throwable unwrapped = AsyncExceptionResolver.unwrap(rollbackEx);
 
         if (unwrapped instanceof TransferException) {
             return CompletableFuture.failedFuture(unwrapped);
@@ -215,7 +215,7 @@ public class PayCommandApplicationService {
     }
 
     private PayExecutionResult handleTransferException(Throwable ex, String phase) {
-        Throwable cause = unwrapException(ex);
+        Throwable cause = AsyncExceptionResolver.unwrap(ex);
 
         if (cause instanceof NotFoundException) {
             logError("Player not found during " + phase, cause);
@@ -238,7 +238,7 @@ public class PayCommandApplicationService {
     }
 
     private PayExecutionResult handleReceiverLookupException(Throwable ex) {
-        Throwable cause = unwrapException(ex);
+        Throwable cause = AsyncExceptionResolver.unwrap(ex);
 
         if (cause instanceof NotFoundException) {
             logInfo("Receiver not found: " + cause.getMessage());
@@ -250,7 +250,7 @@ public class PayCommandApplicationService {
     }
 
     private PayExecutionResult handleTopLevelException(Throwable ex) {
-        Throwable cause = unwrapException(ex);
+        Throwable cause = AsyncExceptionResolver.unwrap(ex);
 
         if (cause instanceof NotFoundException) {
             logInfo("Payer not found: " + cause.getMessage());
@@ -259,19 +259,6 @@ public class PayCommandApplicationService {
 
         logError("Top-level error during payment", cause);
         return PayExecutionResult.exception();
-    }
-
-    /**
-     * Unwraps CompletionException and ExecutionException to get the root cause.
-     */
-    private Throwable unwrapException(Throwable ex) {
-        Throwable cause = ex;
-        while ((cause instanceof java.util.concurrent.CompletionException ||
-                cause instanceof java.util.concurrent.ExecutionException) &&
-                cause.getCause() != null) {
-            cause = cause.getCause();
-        }
-        return cause;
     }
 
     private void logInfo(String message) {

@@ -55,7 +55,7 @@ public final class CommandRegistrar {
                 playerNameCheck,
                 new SetBalanceMessages(
                         plugin.getPluginLogger()),
-                        apps.setBalanceCommandApplication(),
+                        apps.getSetBalanceCommandApplication(),
                         plugin
         ));
     }
