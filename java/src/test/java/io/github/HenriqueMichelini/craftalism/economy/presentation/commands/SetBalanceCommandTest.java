@@ -2,6 +2,7 @@ package io.github.HenriqueMichelini.craftalism.economy.presentation.commands;
 
 import io.github.HenriqueMichelini.craftalism.economy.application.dto.SetBalanceExecutionResult;
 import io.github.HenriqueMichelini.craftalism.economy.application.service.SetBalanceCommandApplicationService;
+import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.CurrencyFormatter;
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.SetBalanceMessages;
 import io.github.HenriqueMichelini.craftalism.economy.presentation.validation.PlayerNameCheck;
 import org.bukkit.Bukkit;
@@ -18,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
@@ -38,6 +40,8 @@ class SetBalanceCommandTest {
     private JavaPlugin plugin;
     @Mock
     private Logger logger;
+    @Mock
+    private CurrencyFormatter formatter;
 
     @Mock
     private CommandSender sender;
@@ -56,13 +60,17 @@ class SetBalanceCommandTest {
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-        setBalanceCommand = new SetBalanceCommand(playerNameCheck, messages, service, plugin);
+        setBalanceCommand = new SetBalanceCommand(playerNameCheck, messages, service, plugin, formatter);
 
         when(sender.hasPermission(anyString())).thenReturn(true);
         when(senderPlayer.hasPermission(anyString())).thenReturn(true);
         when(senderPlayer.getName()).thenReturn("Admin");
         when(playerNameCheck.isValid(anyString())).thenReturn(true);
         when(plugin.getLogger()).thenReturn(logger);
+        when(formatter.fromDisplayValue(any(BigDecimal.class))).thenAnswer(invocation ->
+                invocation.<BigDecimal>getArgument(0).longValueExact());
+        when(formatter.formatCurrency(anyLong())).thenAnswer(invocation ->
+                String.valueOf(invocation.getArgument(0)));
 
         doAnswer(invocation -> {
             Runnable task = invocation.getArgument(1);
