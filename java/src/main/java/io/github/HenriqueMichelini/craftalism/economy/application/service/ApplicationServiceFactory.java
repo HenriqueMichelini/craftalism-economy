@@ -3,7 +3,6 @@ package io.github.HenriqueMichelini.craftalism.economy.application.service;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.repository.BalanceCacheRepository;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.repository.PlayerCacheRepository;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.ApiServiceFactory;
-import io.github.HenriqueMichelini.craftalism.economy.infra.config.ConfigLoader;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ApplicationServiceFactory {
@@ -18,51 +17,28 @@ public final class ApplicationServiceFactory {
     private final SetBalanceCommandApplicationService setBalanceCmdApp;
 
     public ApplicationServiceFactory(
-        JavaPlugin plugin,
-        ApiServiceFactory apis,
-        long DEFAULT_VALUE
+            JavaPlugin plugin,
+            ApiServiceFactory apis,
+            long defaultBalance
     ) {
         PlayerCacheRepository playerCache = new PlayerCacheRepository();
-
-        this.playerApp = new PlayerApplicationService(
-            apis.getPlayerApi(),
-            playerCache
-        );
-
         BalanceCacheRepository balanceCache = new BalanceCacheRepository();
 
-        this.balanceApp = new BalanceApplicationService(
-            apis.getBalanceApi(),
-            balanceCache,
-            DEFAULT_VALUE
-        );
-
-        this.transactionApp = new TransactionApplicationService(
-            apis.getTransactionApi()
-        );
+        this.playerApp = new PlayerApplicationService(apis.getPlayerApi(), playerCache);
+        this.balanceApp = new BalanceApplicationService(apis.getBalanceApi(), balanceCache, defaultBalance);
+        this.transactionApp = new TransactionApplicationService(apis.getTransactionApi());
 
         this.payCmdApp = new PayCommandApplicationService(
-            playerApp,
-            apis.getPlayerApi(),
-            apis.getBalanceApi(),
-            apis.getTransactionApi(),
-            plugin
+                playerApp,
+                apis.getPlayerApi(),
+                apis.getBalanceApi(),
+                apis.getTransactionApi(),
+                plugin
         );
 
-        this.balanceCmdApp = new BalanceCommandApplicationService(
-            playerApp,
-            balanceApp
-        );
-
-        this.baltopCmdApp = new BaltopCommandApplicationService(
-            apis.getBalanceApi(),
-            apis.getPlayerApi()
-        );
-
-        this.setBalanceCmdApp = new SetBalanceCommandApplicationService(
-            apis.getBalanceApi(),
-            playerApp
-        );
+        this.balanceCmdApp = new BalanceCommandApplicationService(playerApp, balanceApp);
+        this.baltopCmdApp = new BaltopCommandApplicationService(apis.getBalanceApi(), apis.getPlayerApi());
+        this.setBalanceCmdApp = new SetBalanceCommandApplicationService(apis.getBalanceApi(), playerApp);
     }
 
     public PlayerApplicationService getPlayerApplication() {
@@ -89,13 +65,11 @@ public final class ApplicationServiceFactory {
         return baltopCmdApp;
     }
 
-    public SetBalanceCommandApplicationService setBalanceCommandApplication() {
+    public SetBalanceCommandApplicationService getSetBalanceCommandApplication() {
         return setBalanceCmdApp;
     }
 
     public void shutdown() {
         // persist caches, shutdown http client, etc.
-        //        playerCache.clear();
-        //        balanceCache.clear();
     }
 }
