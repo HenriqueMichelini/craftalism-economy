@@ -8,18 +8,22 @@ import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messag
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.PayMessages;
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.SetBalanceMessages;
 import io.github.HenriqueMichelini.craftalism.economy.presentation.validation.PlayerNameCheck;
+import java.util.Objects;
 import org.bukkit.command.CommandExecutor;
 
-import java.util.Objects;
-
 public final class CommandRegistrar {
+
     private final CraftalismEconomy plugin;
     private final ApplicationServiceFactory apps;
     private final FormatterFactory formatters;
 
     private final PlayerNameCheck playerNameCheck = new PlayerNameCheck();
 
-    public CommandRegistrar(CraftalismEconomy plugin, ApplicationServiceFactory apps, FormatterFactory formatters) {
+    public CommandRegistrar(
+        CraftalismEconomy plugin,
+        ApplicationServiceFactory apps,
+        FormatterFactory formatters
+    ) {
         this.plugin = plugin;
         this.apps = apps;
         this.formatters = formatsOrThrow(formatters);
@@ -30,40 +34,51 @@ public final class CommandRegistrar {
     }
 
     public void registerAll() {
-        register("pay", new PayCommand(
-                new PayMessages(
-                        plugin.getPluginLogger()),
-                        apps.getPayCommandApplication(),
-                        apps.getTransactionApplication(),
-                        playerNameCheck,
-                        formatters.getFormatter()
-        ));
-        register("balance", new BalanceCommand(
-                new BalanceMessages(
-                        plugin.getPluginLogger()),
-                        playerNameCheck,
-                        apps.getBalanceCommandApplication(),
-                        formatters.getFormatter()
-        ));
-        register("baltop", new BaltopCommand(
-                new BaltopMessages(
-                        plugin.getPluginLogger()),
-                        apps.getBaltopCommandApplication(),
-                        formatters.getFormatter()
-        ));
-        register("setbalance", new SetBalanceCommand(
+        register(
+            "pay",
+            new PayCommand(
+                new PayMessages(plugin.getPluginLogger()),
+                apps.getPayCommandApplication(),
+                apps.getTransactionApplication(),
                 playerNameCheck,
-                new SetBalanceMessages(
-                        plugin.getPluginLogger()),
-                        apps.getSetBalanceCommandApplication(),
-                        plugin
-        ));
+                formatters.getFormatter()
+            )
+        );
+        register(
+            "balance",
+            new BalanceCommand(
+                new BalanceMessages(plugin.getPluginLogger()),
+                playerNameCheck,
+                apps.getBalanceCommandApplication(),
+                formatters.getFormatter()
+            )
+        );
+        register(
+            "baltop",
+            new BaltopCommand(
+                new BaltopMessages(plugin.getPluginLogger()),
+                apps.getBaltopCommandApplication(),
+                formatters.getFormatter()
+            )
+        );
+        register(
+            "setbalance",
+            new SetBalanceCommand(
+                playerNameCheck,
+                new SetBalanceMessages(plugin.getPluginLogger()),
+                apps.getSetBalanceCommandApplication(),
+                plugin,
+                formatters.getFormatter()
+            )
+        );
     }
 
     private void register(String name, CommandExecutor executor) {
         var cmd = plugin.getCommand(name);
         if (cmd == null) {
-            plugin.getLogger().severe("Command not registered in plugin.yml: /" + name);
+            plugin
+                .getLogger()
+                .severe("Command not registered in plugin.yml: /" + name);
             return;
         }
         cmd.setExecutor(executor);
