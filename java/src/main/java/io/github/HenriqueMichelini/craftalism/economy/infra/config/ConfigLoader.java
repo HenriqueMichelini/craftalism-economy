@@ -1,7 +1,6 @@
 package io.github.HenriqueMichelini.craftalism.economy.infra.config;
 
 import io.github.HenriqueMichelini.craftalism.economy.CraftalismEconomy;
-import io.github.HenriqueMichelini.craftalism.economy.infra.config.ConnectionConfig;
 import java.util.Locale;
 
 public final class ConfigLoader {
