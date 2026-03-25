@@ -34,3 +34,4 @@ java/.env
 !java/.env.example
 .idea/
 .zed
+java/.settings/org.eclipse.buildship.core.prefs
