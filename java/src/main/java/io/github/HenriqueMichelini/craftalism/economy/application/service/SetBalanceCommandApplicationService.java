@@ -44,19 +44,10 @@ public class SetBalanceCommandApplicationService {
                 .exceptionally(ex -> SetBalanceExecutionResult.updateFailed());
     }
 
-    private SetBalanceExecutionResult handleException(Throwable ex) {
-        Throwable cause = ex;
-        while (cause.getCause() != null &&
-                (cause instanceof java.util.concurrent.CompletionException ||
-                        cause instanceof java.util.concurrent.ExecutionException)) {
-            cause = cause.getCause();
-        }
-
-        if (cause instanceof NotFoundException ||
-                cause.getClass().getName().contains("NotFoundException")) {
+    private SetBalanceExecutionResult handleException(Throwable exception) {
+        if (AsyncExceptionResolver.isCausedBy(exception, NotFoundException.class)) {
             return SetBalanceExecutionResult.playerNotFound();
         }
-
         return SetBalanceExecutionResult.exception();
     }
 }
