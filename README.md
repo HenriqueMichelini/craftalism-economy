@@ -1,90 +1,257 @@
 # Craftalism Economy
 
-A production-oriented Minecraft economy plugin built with a layered architecture and asynchronous API integration.
+Craftalism Economy is a **Paper/Spigot Minecraft plugin** that delegates economy data to an external HTTP API.
 
-## Project goals
+Instead of storing balances directly inside the Minecraft server, the plugin acts as an asynchronous client for a backend service (players, balances, transactions). This keeps command handling responsive while centralizing economy state in one API.
 
-- Keep game-thread work minimal and non-blocking.
-- Encapsulate business rules in application/domain layers.
-- Make failures explicit through typed result DTOs and status enums.
-- Keep infrastructure concerns (HTTP, config, cache, external API) isolated from gameplay commands.
+---
 
-## Architecture
+## What this project does
 
-The project follows a **layered architecture** with explicit boundaries:
+This plugin provides economy gameplay commands and sync behavior:
 
-- **Presentation (`presentation`)**
-  - Bukkit commands and listeners.
-  - Input validation (e.g., player name checks).
-  - Maps application result DTOs to player-facing messages.
+- `/balance` — check your own or another player's balance
+- `/pay` — transfer funds between players with rollback protection
+- `/setbalance` — set a player's balance (permission-gated)
+- `/baltop` — list top balances
+- Automatic player + balance bootstrap on player join
 
-- **Application (`application`)**
-  - Orchestrates use-cases (`PayCommandApplicationService`, `SetBalanceCommandApplicationService`, etc.).
-  - Coordinates domain and infrastructure services.
-  - Returns typed execution results (`*ExecutionResult`) instead of leaking infra exceptions.
+All business flows are implemented asynchronously with `CompletableFuture` and call an OAuth2-protected external API.
 
-- **Domain (`domain`)**
-  - Core entities (`Player`, `Balance`, `Transaction`).
-  - Currency and validation services.
-  - Log message abstractions.
+---
 
-- **Infrastructure (`infra`)**
-  - External API clients/services.
-  - Config loading and bootstrap wiring.
-  - Cache repositories.
+## Key features (implemented)
 
-## Request flow example (`/pay`)
+- **Asynchronous command execution** to avoid blocking the main server thread
+- **Layered architecture** (presentation → application → domain → infrastructure)
+- **Typed command outcomes** (status enums and execution result DTOs)
+- **External API integration** for players/balances/transactions
+- **OAuth2 client-credentials authentication** with token caching
+- **Rollback logic for `/pay` transfers** when deposit fails after withdrawal
+- **Caffeine-based in-memory cache** for players and balances
+- **Config-driven currency formatting** (locale, symbol, fallback)
+- **YAML-driven player-facing message templates** (`logs.yml`)
+- **Unit test coverage** across presentation/application/domain/infra modules
 
-1. Command handler validates raw command arguments.
-2. `PayCommandApplicationService` resolves payer + receiver.
-3. Business validation runs (self-payment, amount, funds).
-4. Transfer is executed with rollback protection.
-5. Transaction logging runs as best-effort.
-6. Result status is translated into localized/logged messages.
+---
 
-## Reliability and failure handling
+## Tech stack
 
-- External failures are unwrapped and normalized via asynchronous exception handling.
-- Transfer path includes rollback behavior if receiver deposit fails.
-- Transaction registration is non-blocking best-effort to avoid reverting successful transfers.
+- **Language**: Java 21
+- **Build tool**: Gradle (wrapper included)
+- **Minecraft API**: Paper API `1.21.4-R0.1-SNAPSHOT`
+- **Libraries**:
+  - Gson (JSON)
+  - Apache HttpClient dependency present (plugin runtime client currently uses Java `HttpClient`)
+  - Caffeine (cache)
+- **Testing**:
+  - JUnit 5
+  - Mockito
+  - MockBukkit
 
-## Requirements
+---
 
-- Java 21+
-- Gradle Wrapper (included)
-- A Paper/Spigot-compatible server for runtime testing
+## Architecture overview
 
-> Note: In some environments, Gradle may fail if the runtime JDK is newer than the wrapper/toolchain support.
+The codebase follows a layered structure:
 
-## Running locally
+### 1) Presentation layer (`presentation`)
+- Bukkit command executors:
+  - `PayCommand`
+  - `BalanceCommand`
+  - `SetBalanceCommand`
+  - `BaltopCommand`
+- Event listener:
+  - `OnJoin` (loads/creates player + balance in API/cache)
+- Input validation:
+  - `PlayerNameCheck`
+
+### 2) Application layer (`application`)
+Use-case orchestration and status mapping:
+
+- `PayCommandApplicationService`
+- `BalanceCommandApplicationService`
+- `SetBalanceCommandApplicationService`
+- `BaltopCommandApplicationService`
+- `PlayerApplicationService`
+- `BalanceApplicationService`
+- `TransactionApplicationService`
+
+These classes coordinate domain logic and infra services, returning explicit DTO/status results instead of leaking low-level exceptions into command handlers.
+
+### 3) Domain layer (`domain`)
+Core models and rules:
+
+- Models: `Player`, `Balance`, `Transaction`
+- Currency services: `CurrencyFormatter`, `CurrencyParser`
+- Validation/services: `FundsTransfer`, `AmountCheck`
+- Messaging abstractions via log/message helper classes
+
+### 4) Infrastructure layer (`infra`)
+External integrations and wiring:
+
+- API services: `PlayerApiService`, `BalanceApiService`, `TransactionApiService`
+- HTTP client + OAuth2 token service
+- Config loading (`ConfigLoader`, `ConnectionConfig`)
+- Cache repositories (`PlayerCacheRepository`, `BalanceCacheRepository`)
+- Bootstrap/container wiring (`BootContainer`)
+
+---
+
+## Runtime flow (high-level)
+
+### `/pay` flow (implemented)
+1. Validate sender permissions and arguments.
+2. Resolve payer from cache/API and receiver from API.
+3. Validate amount/self-payment.
+4. Withdraw from payer.
+5. Deposit to receiver.
+6. If deposit fails, attempt rollback deposit back to payer.
+7. Register transaction as best-effort (failure does not revert successful transfer).
+8. Map result status to player messages.
+
+### Join flow (implemented)
+On player join, plugin ensures player exists in API and then ensures balance exists (or creates default balance), caching results.
+
+---
+
+## Configuration
+
+Configuration files are bundled under `java/src/main/resources/` and copied to plugin data folder at runtime:
+
+- `config.yml`
+  - `default-balance` (internal scaled value; default `100000000`)
+  - `locale` (default `en-US`)
+  - `currency-symbol` (default `$`)
+  - `null-representation`
+
+- `connection-config.yml`
+  - API base URL
+  - OAuth issuer/token path
+  - OAuth client id/secret/scopes
+  - HTTP timeouts
+
+- `logs.yml`
+  - Prefix and localized/message-template strings for all commands and system messages
+
+### Environment variable overrides
+
+`ConfigLoader` supports environment overrides for connection/auth values:
+
+- `CRAFTALISM_API_URL`
+- `AUTH_ISSUER_URI`
+- `AUTH_TOKEN_PATH`
+- `MINECRAFT_CLIENT_ID`
+- `MINECRAFT_CLIENT_SECRET`
+- `CRAFTALISM_API_KEY` (fallback for client secret)
+- `MINECRAFT_CLIENT_SCOPES`
+
+> In production, prefer environment variables for secrets instead of hardcoding `client-secret` in YAML.
+
+---
+
+## Commands and permissions
+
+### Commands
+
+- `/pay <player> <amount>`
+- `/balance` or `/balance <player>`
+- `/setbalance <player> <amount>`
+- `/baltop`
+
+### Permissions
+
+- `craftalism.pay` (default: true)
+- `craftalism.balance.self` (default: true)
+- `craftalism.balance.other` (default: op)
+- `craftalism.setbalance` (default: op)
+- `craftalism.baltop` (default: true)
+
+---
+
+## External API contract expected by plugin
+
+The plugin calls these endpoints:
+
+- `GET /api/players/{uuid}`
+- `GET /api/players/name/{name}`
+- `POST /api/players`
+
+- `GET /api/balances/{uuid}`
+- `POST /api/balances`
+- `PUT /api/balances/{uuid}/set`
+- `POST /api/balances/{uuid}/deposit?amount={amount}`
+- `POST /api/balances/{uuid}/withdraw?amount={amount}`
+- `GET /api/balances/top?limit={n}`
+
+- `POST /api/transactions`
+
+OAuth2 token retrieval is done via configured auth server + token path using client credentials flow.
+
+---
+
+## Build and test
+
+From repository root:
 
 ```bash
 cd java
 ./gradlew clean build
 ```
 
-## Testing
+Run tests:
 
 ```bash
 cd java
 ./gradlew test
 ```
 
-## Configuration
+---
 
-Main configs are under `java/src/main/resources/`:
+## Local development setup (plugin + API)
 
-- `config.yml`
-- `connection-config.yml`
-- `logs.yml`
+1. Start the external economy API and OAuth2 issuer configured in `connection-config.yml`.
+2. Build the plugin JAR with Gradle.
+3. Copy generated JAR into your Paper server `plugins/` folder.
+4. Start server once to generate config files (if needed).
+5. Edit plugin configs in the server plugin data folder.
+6. Restart server and test commands in-game.
 
-Adjust API endpoints, auth, formatting, and default economy values before production deployment.
+---
 
-## Portfolio/production readiness checklist
+## Repository structure
 
-- [x] Layered architecture with clear separation of concerns
-- [x] Dedicated application services per command/use-case
-- [x] Unit tests for domain/application/infra behavior
-- [x] Explicit status-driven responses for command flows
-- [ ] Integration tests against a real API sandbox
-- [ ] Production telemetry/metrics and alerting hooks
+```text
+.
+├── README.md
+├── LICENSE
+└── java/
+    ├── build.gradle
+    ├── gradlew
+    ├── src/main/java/io/github/HenriqueMichelini/craftalism/economy/
+    │   ├── presentation/
+    │   ├── application/
+    │   ├── domain/
+    │   └── infra/
+    ├── src/main/resources/
+    │   ├── plugin.yml
+    │   ├── config.yml
+    │   ├── connection-config.yml
+    │   └── logs.yml
+    └── src/test/java/
+```
+
+---
+
+## Current limitations / improvement opportunities
+
+- `OnQuit` listener exists but is not registered in `EventRegistrar`.
+- `BootContainer#shutdown()` is currently a placeholder.
+- Integration/E2E tests against a real API are not included.
+- Some command input validation rules are strict/uneven (`/setbalance` currently accepts numeric digits only before scaling).
+
+---
+
+## License
+
+MIT License.
