@@ -23,6 +23,8 @@ class ApiServiceFactoryTest {
         when(cfg.clientId()).thenReturn("minecraft-server");
         when(cfg.clientSecret()).thenReturn("secret");
         when(cfg.oauthScopes()).thenReturn("api:read api:write");
+        when(cfg.httpConnectTimeoutSeconds()).thenReturn(5);
+        when(cfg.httpRequestTimeoutSeconds()).thenReturn(10);
         factory = new ApiServiceFactory(cfg);
     }
 

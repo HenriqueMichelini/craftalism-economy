@@ -70,7 +70,7 @@ public class SetBalanceCommand implements CommandExecutor {
             return true;
         }
 
-        if (!amountStr.matches("\\d+(\\.\\d{1,2})?")) {
+        if (!amountStr.matches("\\d+")) {
             messages.sendSetBalanceInvalidAmount(sender);
             return true;
         }
@@ -79,7 +79,7 @@ public class SetBalanceCommand implements CommandExecutor {
         try {
             BigDecimal displayAmount = new BigDecimal(amountStr);
             amount = formatter.fromDisplayValue(displayAmount);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException | ArithmeticException e) {
             messages.sendSetBalanceInvalidAmount(sender);
             return true;
         }
