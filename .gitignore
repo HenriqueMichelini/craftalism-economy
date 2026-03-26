@@ -49,9 +49,6 @@ java/.settings/
 java/.classpath
 java/.settings/org.eclipse.buildship.core.prefs
 
-# Zed editor
-.zed
-
 # =========================
 # Environment / Config
 # =========================
