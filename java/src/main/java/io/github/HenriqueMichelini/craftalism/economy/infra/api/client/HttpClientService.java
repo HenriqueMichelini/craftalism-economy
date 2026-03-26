@@ -8,20 +8,31 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
 
 public class HttpClientService {
 
+    private static final Logger LOGGER = Logger.getLogger(
+        HttpClientService.class.getName()
+    );
     private final HttpClient http;
     private final String baseUrl;
     private final OAuth2TokenService tokenService;
+    private final int requestTimeoutSeconds;
 
-    public HttpClientService(String baseUrl, OAuth2TokenService tokenService) {
+    public HttpClientService(
+        String baseUrl,
+        OAuth2TokenService tokenService,
+        int connectTimeoutSeconds,
+        int requestTimeoutSeconds
+    ) {
         this.http = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)
-            .connectTimeout(Duration.ofSeconds(5))
+            .connectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
             .build();
         this.baseUrl = baseUrl;
         this.tokenService = tokenService;
+        this.requestTimeoutSeconds = requestTimeoutSeconds;
     }
 
     private CompletableFuture<HttpRequest.Builder> authenticatedRequest(
@@ -32,7 +43,7 @@ public class HttpClientService {
             .thenApply(token ->
                 HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + path))
-                    .timeout(Duration.ofSeconds(10))
+                    .timeout(Duration.ofSeconds(requestTimeoutSeconds))
                     .header("Content-Type", "application/json")
                     .header("Authorization", "Bearer " + token)
             );
@@ -72,29 +83,30 @@ public class HttpClientService {
         HttpRequest request,
         String path
     ) {
-        System.out.println("[HttpClient] -> " + request.uri());
+        LOGGER.fine(() -> "[HttpClient] -> " + request.method() + " " + request.uri());
         return withTimeoutHandling(
             path,
             http
                 .sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .whenComplete((resp, err) -> {
                     if (resp != null) {
-                        System.out.println(
+                        LOGGER.fine(() ->
                             "[HttpClient] <- " +
                                 resp.statusCode() +
-                                " : " +
-                                safePreview(resp.body())
+                                " (" +
+                                safeBodyLength(resp.body()) +
+                                " chars)"
                         );
                     } else {
-                        System.out.println("[HttpClient] <- ERROR : " + err);
+                        LOGGER.warning("[HttpClient] <- ERROR : " + err);
                     }
                 })
         );
     }
 
-    private String safePreview(String body) {
-        if (body == null) return "<null>";
-        return body.length() > 300 ? body.substring(0, 300) + "..." : body;
+    private int safeBodyLength(String body) {
+        if (body == null) return 0;
+        return body.length();
     }
 
     private <T> CompletableFuture<T> withTimeoutHandling(
@@ -102,7 +114,7 @@ public class HttpClientService {
         CompletableFuture<T> future
     ) {
         return future
-            .orTimeout(10, TimeUnit.SECONDS)
+            .orTimeout(requestTimeoutSeconds, TimeUnit.SECONDS)
             .exceptionally(ex -> {
                 Throwable cause =
                     ex instanceof CompletionException ? ex.getCause() : ex;

@@ -37,7 +37,7 @@ public class ConnectionConfig {
     }
 
     public String getUrl() {
-        return connectionConfig.getString("url", "");
+        return connectionConfig.getString("url", "http://localhost:8080");
     }
 
     public String getAuthServerUrl() {
@@ -61,5 +61,13 @@ public class ConnectionConfig {
 
     public String getScopes() {
         return connectionConfig.getString("scopes", "api:read api:write");
+    }
+
+    public int getHttpConnectTimeoutSeconds() {
+        return connectionConfig.getInt("http-connect-timeout-seconds", 5);
+    }
+
+    public int getHttpRequestTimeoutSeconds() {
+        return connectionConfig.getInt("http-request-timeout-seconds", 10);
     }
 }
