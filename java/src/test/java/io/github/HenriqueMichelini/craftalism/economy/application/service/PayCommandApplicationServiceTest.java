@@ -18,7 +18,6 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,9 +42,6 @@ class PayCommandApplicationServiceTest {
     private TransactionApiService transactionApi;
 
     @Mock
-    private JavaPlugin plugin;
-
-    @Mock
     private java.util.logging.Logger logger;
 
     private PayCommandApplicationService service;
@@ -63,14 +59,13 @@ class PayCommandApplicationServiceTest {
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-        when(plugin.getLogger()).thenReturn(logger);
 
         service = new PayCommandApplicationService(
             playerService,
             playerApi,
             balanceApi,
             transactionApi,
-            plugin
+            logger
         );
 
         payerUuid = UUID.randomUUID();

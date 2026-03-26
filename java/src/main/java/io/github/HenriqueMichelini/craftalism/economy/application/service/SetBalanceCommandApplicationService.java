@@ -41,7 +41,12 @@ public class SetBalanceCommandApplicationService {
     private CompletableFuture<SetBalanceExecutionResult> setBalanceForPlayer(UUID uuid, long amount) {
         return balanceApi.updateBalance(uuid, amount)
                 .thenApply(v -> SetBalanceExecutionResult.success(amount, uuid))
-                .exceptionally(ex -> SetBalanceExecutionResult.updateFailed());
+                .exceptionally(ex -> {
+                    if (AsyncExceptionResolver.isCausedBy(ex, NotFoundException.class)) {
+                        return SetBalanceExecutionResult.playerNotFound();
+                    }
+                    return SetBalanceExecutionResult.updateFailed();
+                });
     }
 
     private SetBalanceExecutionResult handleException(Throwable exception) {
