@@ -7,10 +7,15 @@ public final class ConfigLoader {
 
     private final CraftalismEconomy plugin;
     private final ConnectionConfig connectionConfig;
+
     private static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 5;
     private static final int DEFAULT_REQUEST_TIMEOUT_SECONDS = 10;
 
     public ConfigLoader(CraftalismEconomy plugin) {
+        this(plugin, new SystemEnvironment());
+    }
+
+    ConfigLoader(CraftalismEconomy plugin, EnvironmentI environment) {
         this.plugin = plugin;
         this.connectionConfig = new ConnectionConfig(plugin);
     }
@@ -67,7 +72,10 @@ public final class ConfigLoader {
         if (envUrl != null && !envUrl.isBlank()) {
             return normalizeBaseUrl(envUrl, "CRAFTALISM_API_URL");
         }
-        return normalizeBaseUrl(connectionConfig.getUrl(), "connection-config.yml:url");
+        return normalizeBaseUrl(
+            connectionConfig.getUrl(),
+            "connection-config.yml:url"
+        );
     }
 
     public String authServerUrl() {
@@ -142,7 +150,13 @@ public final class ConfigLoader {
             plugin
                 .getLogger()
                 .warning(
-                    "Invalid timeout for " + key + " (" + value + "), falling back to " + fallback + " seconds."
+                    "Invalid timeout for " +
+                        key +
+                        " (" +
+                        value +
+                        "), falling back to " +
+                        fallback +
+                        " seconds."
                 );
             return fallback;
         }
@@ -151,13 +165,15 @@ public final class ConfigLoader {
 
     private String normalizeBaseUrl(String value, String sourceName) {
         String trimmed = value == null ? "" : value.trim();
-        if (
-            !trimmed.startsWith("http://") && !trimmed.startsWith("https://")
-        ) {
+        if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
             plugin
                 .getLogger()
                 .warning(
-                    "Invalid URL in " + sourceName + ": '" + value + "'. Falling back to http://localhost:8080"
+                    "Invalid URL in " +
+                        sourceName +
+                        ": '" +
+                        value +
+                        "'. Falling back to http://localhost:8080"
                 );
             return "http://localhost:8080";
         }
@@ -172,13 +188,13 @@ public final class ConfigLoader {
             plugin
                 .getLogger()
                 .warning(
-                    "Blank token path in " + sourceName + ", falling back to /oauth2/token"
+                    "Blank token path in " +
+                        sourceName +
+                        ", falling back to /oauth2/token"
                 );
             return "/oauth2/token";
         }
-        if (
-            trimmed.startsWith("http://") || trimmed.startsWith("https://")
-        ) {
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
             return trimmed;
         }
         return trimmed.startsWith("/") ? trimmed : "/" + trimmed;

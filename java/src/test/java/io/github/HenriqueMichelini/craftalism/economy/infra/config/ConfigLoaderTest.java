@@ -13,7 +13,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
-import org.mockito.MockedStatic;
 
 class ConfigLoaderTest {
 
@@ -30,6 +29,7 @@ class ConfigLoaderTest {
         when(plugin.getConfig()).thenReturn(config);
         when(plugin.getLogger()).thenReturn(logger);
 
+        // For tests that don't need environment mocking, use the real environment
         loader = new ConfigLoader(plugin);
     }
 
@@ -49,7 +49,9 @@ class ConfigLoaderTest {
         Locale result = loader.locale();
 
         assertEquals(Locale.US, result);
-        verify(logger).warning("Invalid locale 'INVALID_LOCALE', defaulting to en-US");
+        verify(logger).warning(
+            "Invalid locale 'INVALID_LOCALE', defaulting to en-US"
+        );
     }
 
     @Test
@@ -68,7 +70,9 @@ class ConfigLoaderTest {
 
     @Test
     void defaultBalance_withPositiveValue_returnsConfigured() {
-        when(config.getLong("default-balance", 100_000_000L)).thenReturn(500_000L);
+        when(config.getLong("default-balance", 100_000_000L)).thenReturn(
+            500_000L
+        );
 
         assertEquals(500_000L, loader.defaultBalance());
     }
@@ -80,17 +84,31 @@ class ConfigLoaderTest {
         long result = loader.defaultBalance();
 
         assertEquals(100_000_000L, result);
-        verify(logger).warning("Invalid negative default balance, using 100000000");
+        verify(logger).warning(
+            "Invalid negative default balance, using 100000000"
+        );
     }
 
     @Test
     void baseUrl_readsValueFromConnectionConfig() {
+        // Create a fresh plugin mock
+        CraftalismEconomy plugin = mock(CraftalismEconomy.class);
+        // Mock the environment to return null for the env var
+        EnvironmentI environment = mock(EnvironmentI.class);
+        when(environment.getenv("CRAFTALISM_API_URL")).thenReturn(null);
+
         try (
             MockedConstruction<ConnectionConfig> mocked = mockConstruction(
                 ConnectionConfig.class,
-                (connectionConfig, context) -> when(connectionConfig.getUrl()).thenReturn("https://external-api.test")
+                (connectionConfig, context) ->
+                    when(connectionConfig.getUrl()).thenReturn(
+                        "https://external-api.test"
+                    )
             )
         ) {
+            // Use the test constructor with mocked environment
+            ConfigLoader loader = new ConfigLoader(plugin, environment);
+
             assertEquals("https://external-api.test", loader.baseUrl());
             assertEquals(1, mocked.constructed().size());
         }
@@ -98,25 +116,39 @@ class ConfigLoaderTest {
 
     @Test
     void oauthFields_readFromConnectionConfig() {
+        CraftalismEconomy plugin = mock(CraftalismEconomy.class);
+        // Mock all environment variables to be null so we fall back to connection config
+        EnvironmentI environment = mock(EnvironmentI.class);
+        when(environment.getenv("AUTH_ISSUER_URI")).thenReturn(null);
+        when(environment.getenv("AUTH_TOKEN_PATH")).thenReturn(null);
+        when(environment.getenv("MINECRAFT_CLIENT_ID")).thenReturn(null);
+        when(environment.getenv("MINECRAFT_CLIENT_SECRET")).thenReturn(null);
+        when(environment.getenv("CRAFTALISM_API_KEY")).thenReturn(null);
+        when(environment.getenv("MINECRAFT_CLIENT_SCOPES")).thenReturn(null);
+
         try (
-            MockedStatic<System> mockedSystem = mockStatic(System.class, CALLS_REAL_METHODS);
             MockedConstruction<ConnectionConfig> mocked = mockConstruction(
                 ConnectionConfig.class,
                 (connectionConfig, context) -> {
-                    when(connectionConfig.getAuthServerUrl()).thenReturn("https://auth.example.test");
-                    when(connectionConfig.getTokenPath()).thenReturn("/realms/token");
-                    when(connectionConfig.getClientId()).thenReturn("minecraft-server");
-                    when(connectionConfig.getClientSecret()).thenReturn("super-secret");
-                    when(connectionConfig.getScopes()).thenReturn("api:read api:write");
+                    when(connectionConfig.getAuthServerUrl()).thenReturn(
+                        "https://auth.example.test"
+                    );
+                    when(connectionConfig.getTokenPath()).thenReturn(
+                        "/realms/token"
+                    );
+                    when(connectionConfig.getClientId()).thenReturn(
+                        "minecraft-server"
+                    );
+                    when(connectionConfig.getClientSecret()).thenReturn(
+                        "super-secret"
+                    );
+                    when(connectionConfig.getScopes()).thenReturn(
+                        "api:read api:write"
+                    );
                 }
             )
         ) {
-            mockedSystem.when(() -> System.getenv("AUTH_ISSUER_URI")).thenReturn(null);
-            mockedSystem.when(() -> System.getenv("AUTH_TOKEN_PATH")).thenReturn(null);
-            mockedSystem.when(() -> System.getenv("MINECRAFT_CLIENT_ID")).thenReturn(null);
-            mockedSystem.when(() -> System.getenv("MINECRAFT_CLIENT_SECRET")).thenReturn(null);
-            mockedSystem.when(() -> System.getenv("CRAFTALISM_API_KEY")).thenReturn(null);
-            mockedSystem.when(() -> System.getenv("MINECRAFT_CLIENT_SCOPES")).thenReturn(null);
+            ConfigLoader loader = new ConfigLoader(plugin, environment);
 
             assertEquals("https://auth.example.test", loader.authServerUrl());
             assertEquals("/realms/token", loader.tokenPath());
