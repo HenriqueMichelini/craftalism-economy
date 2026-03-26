@@ -30,13 +30,21 @@ public final class ApiServiceFactory {
             cfg.oauthScopes()
         );
 
-        this.httpClient = new HttpClientService(cfg.baseUrl(), this.tokenService);
+        this.httpClient =
+            new HttpClientService(
+                cfg.baseUrl(),
+                this.tokenService,
+                cfg.httpConnectTimeoutSeconds(),
+                cfg.httpRequestTimeoutSeconds()
+            );
     }
 
     private synchronized void ensureHttpClient() {
         if (httpClient == null) httpClient = new HttpClientService(
             cfg.baseUrl(),
-            tokenService
+            tokenService,
+            cfg.httpConnectTimeoutSeconds(),
+            cfg.httpRequestTimeoutSeconds()
         );
     }
 

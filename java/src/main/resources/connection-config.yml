@@ -1,6 +1,16 @@
+# Craftalism Economy API endpoint
 url: "http://localhost:8080"
+
+# OAuth2 issuer settings
 auth-server-url: "http://localhost:9000"
 token-path: "/oauth2/token"
 client-id: "minecraft-server"
-client-secret: "change_me"
+
+# Leave empty and provide via environment variable in production:
+#   MINECRAFT_CLIENT_SECRET or CRAFTALISM_API_KEY
+client-secret: ""
 scopes: "api:read api:write"
+
+# HTTP client tuning
+http-connect-timeout-seconds: 5
+http-request-timeout-seconds: 10
