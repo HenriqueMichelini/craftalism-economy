@@ -1,37 +1,61 @@
-# Compiled class file
-java/*.class
-java/bin
+# =========================
+# Java / JVM
+# =========================
 
-# Log file
+# Compiled classes
+java/*.class
+java/bin/
+
+# Logs
 java/*.log
 
-# BlueJ files
+# Crash logs
+java/hs_err_pid*
+java/replay_pid*
+
+# BlueJ
 java/*.ctxt
 
-# Mobile Tools for Java (J2ME)
+# J2ME
 java/.mtj.tmp/
 
-# Package Files #
+# =========================
+# Build & Package Files
+# =========================
+
 java/*.jar
 java/*.war
 java/*.nar
 java/*.ear
+
+# Archives
 java/*.zip
 java/*.tar.gz
 java/*.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-java/hs_err_pid*
-java/replay_pid*
+# Build directories
+java/build/
+java/.gradle/
 
-# Ignore Gradle project-specific cache directory
-java/.gradle
+# =========================
+# IDE & Tooling
+# =========================
 
-# Ignore Gradle build output directory
-java/build
+# IntelliJ
+.idea/
 
+# Eclipse
+java/.settings/
+java/.classpath
+java/.settings/org.eclipse.buildship.core.prefs
+
+# Zed editor
+.zed
+
+# =========================
+# Environment / Config
+# =========================
+
+# Environment variables
 java/.env
 !java/.env.example
-.idea/
-.zed
-java/.settings/org.eclipse.buildship.core.prefs
