@@ -98,8 +98,8 @@ class SetBalanceCommandTest {
             boolean result = setBalanceCommand.onCommand(sender, command, "setbalance", new String[]{"Target", "100"});
 
             assertTrue(result);
-            verify(messages).sendSetBalanceSuccessSender(sender, "Target", "100");
-            verify(messages).sendSetBalanceSuccessReceiver(targetPlayer, "100", "Console");
+            verify(messages, timeout(200)).sendSetBalanceSuccessSender(sender, "Target", "100");
+            verify(messages, timeout(200)).sendSetBalanceSuccessReceiver(targetPlayer, "100", "Console");
         }
     }
 
@@ -116,7 +116,7 @@ class SetBalanceCommandTest {
 
             setBalanceCommand.onCommand(senderPlayer, command, "setbalance", new String[]{"Target", "200"});
 
-            verify(messages).sendSetBalanceSuccessReceiver(targetPlayer, "200", "Admin");
+            verify(messages, timeout(200)).sendSetBalanceSuccessReceiver(targetPlayer, "200", "Admin");
         }
     }
 
@@ -184,7 +184,7 @@ class SetBalanceCommandTest {
             setBalanceCommand.onCommand(sender, command, "setbalance", new String[]{"Target", "00100"});
 
             verify(service).execute("Target", 100L);
-            verify(messages).sendSetBalanceSuccessSender(sender, "Target", "100");
+            verify(messages, timeout(200)).sendSetBalanceSuccessSender(sender, "Target", "100");
         }
     }
 
@@ -201,7 +201,7 @@ class SetBalanceCommandTest {
             setBalanceCommand.onCommand(sender, command, "setbalance", new String[]{"Target", "100"});
 
             verify(messages, never()).sendSetBalanceSuccessReceiver(any(), any(), any());
-            verify(messages).sendSetBalanceSuccessSender(sender, "Target", "100");
+            verify(messages, timeout(200)).sendSetBalanceSuccessSender(sender, "Target", "100");
         }
     }
 }

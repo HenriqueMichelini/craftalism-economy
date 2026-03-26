@@ -13,6 +13,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 
 class ConfigLoaderTest {
 
@@ -98,6 +99,7 @@ class ConfigLoaderTest {
     @Test
     void oauthFields_readFromConnectionConfig() {
         try (
+            MockedStatic<System> mockedSystem = mockStatic(System.class, CALLS_REAL_METHODS);
             MockedConstruction<ConnectionConfig> mocked = mockConstruction(
                 ConnectionConfig.class,
                 (connectionConfig, context) -> {
@@ -109,12 +111,19 @@ class ConfigLoaderTest {
                 }
             )
         ) {
+            mockedSystem.when(() -> System.getenv("AUTH_ISSUER_URI")).thenReturn(null);
+            mockedSystem.when(() -> System.getenv("AUTH_TOKEN_PATH")).thenReturn(null);
+            mockedSystem.when(() -> System.getenv("MINECRAFT_CLIENT_ID")).thenReturn(null);
+            mockedSystem.when(() -> System.getenv("MINECRAFT_CLIENT_SECRET")).thenReturn(null);
+            mockedSystem.when(() -> System.getenv("CRAFTALISM_API_KEY")).thenReturn(null);
+            mockedSystem.when(() -> System.getenv("MINECRAFT_CLIENT_SCOPES")).thenReturn(null);
+
             assertEquals("https://auth.example.test", loader.authServerUrl());
             assertEquals("/realms/token", loader.tokenPath());
             assertEquals("minecraft-server", loader.clientId());
             assertEquals("super-secret", loader.clientSecret());
             assertEquals("api:read api:write", loader.oauthScopes());
-            assertEquals(5, mocked.constructed().size());
+            assertEquals(1, mocked.constructed().size());
         }
     }
 }
