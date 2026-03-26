@@ -9,7 +9,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 
 public class BalanceApplicationService {
 
@@ -48,15 +47,7 @@ public class BalanceApplicationService {
         return api
             .getBalance(uuid)
             .exceptionallyCompose(ex -> {
-                Throwable cause = ex;
-                while (
-                    cause.getCause() != null &&
-                    (cause instanceof CompletionException ||
-                        cause instanceof
-                            java.util.concurrent.ExecutionException)
-                ) {
-                    cause = cause.getCause();
-                }
+                Throwable cause = AsyncExceptionResolver.unwrap(ex);
 
                 if (cause instanceof NotFoundException) {
                     return api.createBalance(uuid, DEFAULT_VALUE);
@@ -106,24 +97,10 @@ public class BalanceApplicationService {
     }
 
     private boolean isNotFoundException(Throwable ex) {
-        return unwrap(ex) instanceof NotFoundException;
-    }
-
-    private Throwable unwrap(Throwable throwable) {
-        Throwable current = throwable;
-        while (
-            current instanceof CompletionException ||
-            current instanceof ExecutionException
-        ) {
-            if (current.getCause() == null) {
-                break;
-            }
-            current = current.getCause();
-        }
-        return current;
+        return AsyncExceptionResolver.unwrap(ex) instanceof NotFoundException;
     }
 
     private <T> T throwAsCompletion(Throwable ex) {
-        throw new CompletionException(unwrap(ex));
+        throw new CompletionException(AsyncExceptionResolver.unwrap(ex));
     }
 }

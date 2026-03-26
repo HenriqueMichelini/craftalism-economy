@@ -39,7 +39,7 @@ public class BalanceCommandApplicationService {
     }
 
     private BalanceExecutionResult handleOtherError(Throwable ex) {
-        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+        Throwable cause = AsyncExceptionResolver.unwrap(ex);
 
         if (cause instanceof NotFoundException) {
             return BalanceExecutionResult.notFound();

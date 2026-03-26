@@ -39,14 +39,14 @@ public class TransactionApplicationService {
     public CompletableFuture<Transaction> registerTransactionWithRetry(UUID from, UUID to, long amount) {
         return api.register(from, to, amount)
                 .exceptionallyCompose(ex -> {
-                    Throwable cause = unwrapException(ex);
+                    Throwable cause = AsyncExceptionResolver.unwrap(ex);
 
                     if (cause instanceof RateLimitException) {
                         // Could implement retry logic here if needed
-                        return CompletableFuture.failedFuture(ex);
+                        return CompletableFuture.failedFuture(cause);
                     }
 
-                    return CompletableFuture.failedFuture(ex);
+                    return CompletableFuture.failedFuture(cause);
                 })
                 .thenApply(this::toTransaction);
     }
@@ -56,12 +56,7 @@ public class TransactionApplicationService {
     }
 
     private Throwable unwrapException(Throwable ex) {
-        Throwable cause = ex;
-        while (cause.getCause() != null &&
-                (cause instanceof CompletionException || cause instanceof java.util.concurrent.ExecutionException)) {
-            cause = cause.getCause();
-        }
-        return cause;
+        return AsyncExceptionResolver.unwrap(ex);
     }
 
     private boolean isNotFoundException(Throwable ex) {
@@ -73,6 +68,6 @@ public class TransactionApplicationService {
     }
 
     private <T> T throwAsCompletion(Throwable ex) {
-        throw new CompletionException(ex);
+        throw new CompletionException(unwrapException(ex));
     }
 }

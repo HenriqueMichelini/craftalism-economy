@@ -33,7 +33,7 @@ public final class ApplicationServiceFactory {
                 apis.getPlayerApi(),
                 apis.getBalanceApi(),
                 apis.getTransactionApi(),
-                plugin
+                plugin.getLogger()
         );
 
         this.balanceCmdApp = new BalanceCommandApplicationService(playerApp, balanceApp);

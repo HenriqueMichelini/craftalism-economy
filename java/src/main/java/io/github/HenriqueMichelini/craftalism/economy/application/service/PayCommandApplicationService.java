@@ -8,30 +8,30 @@ import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFo
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.BalanceApiService;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.PlayerApiService;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.TransactionApiService;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 
 public class PayCommandApplicationService {
     private final PlayerApplicationService playerService;
     private final PlayerApiService playerApi;
     private final BalanceApiService balanceApi;
     private final TransactionApiService transactionApi;
-    private final JavaPlugin plugin;
+    private final Logger logger;
 
     public PayCommandApplicationService(
             PlayerApplicationService playerService,
             PlayerApiService playerApi,
             BalanceApiService balanceApi,
             TransactionApiService transactionApi,
-            JavaPlugin plugin
+            Logger logger
     ) {
         this.playerService = playerService;
         this.playerApi = playerApi;
         this.balanceApi = balanceApi;
         this.transactionApi = transactionApi;
-        this.plugin = plugin;
+        this.logger = logger;
     }
 
     public CompletableFuture<PayExecutionResult> execute(
@@ -262,35 +262,35 @@ public class PayCommandApplicationService {
     }
 
     private void logInfo(String message) {
-        if (plugin != null) {
-            plugin.getLogger().info(message);
+        if (logger != null) {
+            logger.info(message);
         }
     }
 
     private void logWarning(String message) {
-        if (plugin != null) {
-            plugin.getLogger().warning(message);
+        if (logger != null) {
+            logger.warning(message);
         }
     }
 
     private void logError(String message, Throwable ex) {
-        if (plugin != null) {
-            plugin.getLogger().severe(message + ": " + ex.getMessage());
+        if (logger != null) {
+            logger.severe(message + ": " + ex.getMessage());
             if (ex.getCause() != null) {
-                plugin.getLogger().severe("Caused by: " + ex.getCause().getMessage());
+                logger.severe("Caused by: " + ex.getCause().getMessage());
             }
         }
     }
 
     private void logCritical(String message, Throwable ex) {
-        if (plugin != null) {
-            plugin.getLogger().severe("***** CRITICAL ERROR *****");
-            plugin.getLogger().severe(message);
-            plugin.getLogger().severe("Exception: " + ex.getMessage());
+        if (logger != null) {
+            logger.severe("***** CRITICAL ERROR *****");
+            logger.severe(message);
+            logger.severe("Exception: " + ex.getMessage());
             if (ex.getCause() != null) {
-                plugin.getLogger().severe("Caused by: " + ex.getCause().getMessage());
+                logger.severe("Caused by: " + ex.getCause().getMessage());
             }
-            plugin.getLogger().severe("***** END CRITICAL ERROR *****");
+            logger.severe("***** END CRITICAL ERROR *****");
         }
     }
 
