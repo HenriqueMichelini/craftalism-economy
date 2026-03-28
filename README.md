@@ -1,257 +1,240 @@
 # Craftalism Economy
 
-Craftalism Economy is a **Paper/Spigot Minecraft plugin** that delegates economy data to an external HTTP API.
-
-Instead of storing balances directly inside the Minecraft server, the plugin acts as an asynchronous client for a backend service (players, balances, transactions). This keeps command handling responsive while centralizing economy state in one API.
+> Paper/Spigot Minecraft plugin that delegates all economy data to the Craftalism API, keeping balance state centralized and commands responsive via fully asynchronous execution.
 
 ---
 
-## What this project does
+## Overview
 
-This plugin provides economy gameplay commands and sync behavior:
+Instead of storing balances inside the Minecraft server, this plugin acts as an asynchronous HTTP client to the Craftalism backend. Players interact with economy commands in-game; the plugin translates those commands into authenticated API calls, caches results locally, and maps API responses back to player-facing messages.
 
-- `/balance` — check your own or another player's balance
-- `/pay` — transfer funds between players with rollback protection
-- `/setbalance` — set a player's balance (permission-gated)
-- `/baltop` — list top balances
-- Automatic player + balance bootstrap on player join
+**Key capabilities:**
 
-All business flows are implemented asynchronously with `CompletableFuture` and call an OAuth2-protected external API.
-
----
-
-## Key features (implemented)
-
-- **Asynchronous command execution** to avoid blocking the main server thread
-- **Layered architecture** (presentation → application → domain → infrastructure)
-- **Typed command outcomes** (status enums and execution result DTOs)
-- **External API integration** for players/balances/transactions
-- **OAuth2 client-credentials authentication** with token caching
-- **Rollback logic for `/pay` transfers** when deposit fails after withdrawal
-- **Caffeine-based in-memory cache** for players and balances
-- **Config-driven currency formatting** (locale, symbol, fallback)
-- **YAML-driven player-facing message templates** (`logs.yml`)
-- **Unit test coverage** across presentation/application/domain/infra modules
+- `/balance`, `/pay`, `/setbalance`, and `/baltop` economy commands.
+- Fully asynchronous command execution via `CompletableFuture` to avoid blocking the main server thread.
+- OAuth2 `client_credentials` authentication with automatic token caching.
+- Caffeine-based in-memory cache for players and balances to reduce API round-trips.
+- Rollback logic for `/pay`: if the deposit to the receiver fails after a successful withdrawal from the sender, the plugin attempts to reverse the withdrawal.
+- Automatic player and balance provisioning on player join.
+- Config-driven currency formatting (locale, symbol, fallback representation).
+- YAML-driven player-facing message templates.
 
 ---
 
-## Tech stack
+## Architecture
 
-- **Language**: Java 21
-- **Build tool**: Gradle (wrapper included)
-- **Minecraft API**: Paper API `1.21.4-R0.1-SNAPSHOT`
-- **Libraries**:
-  - Gson (JSON)
-  - Apache HttpClient dependency present (plugin runtime client currently uses Java `HttpClient`)
-  - Caffeine (cache)
-- **Testing**:
-  - JUnit 5
-  - Mockito
-  - MockBukkit
+The codebase follows a strict four-layer architecture. Dependencies point inward: presentation and infrastructure depend on application and domain; domain has no outward dependencies.
 
----
+### Presentation layer (`presentation/`)
 
-## Architecture overview
+Bukkit command executors and event listeners. Validates input, calls application services, and maps results to player messages.
 
-The codebase follows a layered structure:
+| Component | Responsibility |
+|---|---|
+| `PayCommand` | Handles `/pay <player> <amount>`. |
+| `BalanceCommand` | Handles `/balance [player]`. |
+| `SetBalanceCommand` | Handles `/setbalance <player> <amount>`. |
+| `BaltopCommand` | Handles `/baltop`. |
+| `OnJoin` | Provisions player and balance in the API and cache on login. |
+| `PlayerNameCheck` | Input validation for player name arguments. |
 
-### 1) Presentation layer (`presentation`)
-- Bukkit command executors:
-  - `PayCommand`
-  - `BalanceCommand`
-  - `SetBalanceCommand`
-  - `BaltopCommand`
-- Event listener:
-  - `OnJoin` (loads/creates player + balance in API/cache)
-- Input validation:
-  - `PlayerNameCheck`
+### Application layer (`application/`)
 
-### 2) Application layer (`application`)
-Use-case orchestration and status mapping:
+Use-case orchestration. Each service coordinates domain and infrastructure calls and returns explicit status enums or result DTOs. No low-level exceptions reach the presentation layer.
 
-- `PayCommandApplicationService`
-- `BalanceCommandApplicationService`
-- `SetBalanceCommandApplicationService`
-- `BaltopCommandApplicationService`
-- `PlayerApplicationService`
-- `BalanceApplicationService`
-- `TransactionApplicationService`
+### Domain layer (`domain/`)
 
-These classes coordinate domain logic and infra services, returning explicit DTO/status results instead of leaking low-level exceptions into command handlers.
+Core models (`Player`, `Balance`, `Transaction`) and business rules (`FundsTransfer`, `AmountCheck`, `CurrencyFormatter`, `CurrencyParser`). No framework dependencies.
 
-### 3) Domain layer (`domain`)
-Core models and rules:
+### Infrastructure layer (`infra/`)
 
-- Models: `Player`, `Balance`, `Transaction`
-- Currency services: `CurrencyFormatter`, `CurrencyParser`
-- Validation/services: `FundsTransfer`, `AmountCheck`
-- Messaging abstractions via log/message helper classes
-
-### 4) Infrastructure layer (`infra`)
-External integrations and wiring:
-
-- API services: `PlayerApiService`, `BalanceApiService`, `TransactionApiService`
-- HTTP client + OAuth2 token service
-- Config loading (`ConfigLoader`, `ConnectionConfig`)
-- Cache repositories (`PlayerCacheRepository`, `BalanceCacheRepository`)
-- Bootstrap/container wiring (`BootContainer`)
+External integrations: HTTP client, OAuth2 token service, API service classes (`PlayerApiService`, `BalanceApiService`, `TransactionApiService`), Caffeine cache repositories, config loading, and the plugin bootstrap container.
 
 ---
 
-## Runtime flow (high-level)
+## Tech Stack
 
-### `/pay` flow (implemented)
-1. Validate sender permissions and arguments.
-2. Resolve payer from cache/API and receiver from API.
-3. Validate amount/self-payment.
-4. Withdraw from payer.
-5. Deposit to receiver.
-6. If deposit fails, attempt rollback deposit back to payer.
-7. Register transaction as best-effort (failure does not revert successful transfer).
-8. Map result status to player messages.
+| Category | Technology |
+|---|---|
+| Language | Java 21 |
+| Minecraft API | Paper API 1.21.4-R0.1-SNAPSHOT |
+| HTTP Client | Java `HttpClient` |
+| Serialization | Gson |
+| Cache | Caffeine |
+| Build Tool | Gradle Wrapper |
+| Testing | JUnit 5, Mockito, MockBukkit |
 
-### Join flow (implemented)
-On player join, plugin ensures player exists in API and then ensures balance exists (or creates default balance), caching results.
+---
+
+## Prerequisites
+
+- Java 21+
+- A running Paper-compatible Minecraft server (1.21.4+)
+- A running instance of the Craftalism API and Craftalism Authorization Server
 
 ---
 
 ## Configuration
 
-Configuration files are bundled under `java/src/main/resources/` and copied to plugin data folder at runtime:
+Configuration files are bundled in the JAR and written to the plugin data folder on first run.
 
-- `config.yml`
-  - `default-balance` (internal scaled value; default `100000000`)
-  - `locale` (default `en-US`)
-  - `currency-symbol` (default `$`)
-  - `null-representation`
+### `config.yml`
 
-- `connection-config.yml`
-  - API base URL
-  - OAuth issuer/token path
-  - OAuth client id/secret/scopes
-  - HTTP timeouts
+| Key | Default | Description |
+|---|---|---|
+| `default-balance` | `100000000` | Initial balance for new players (internal scaled integer). |
+| `locale` | `en-US` | Locale used for currency formatting. |
+| `currency-symbol` | `$` | Symbol prepended to formatted amounts. |
+| `null-representation` | — | String shown when a value cannot be formatted. |
 
-- `logs.yml`
-  - Prefix and localized/message-template strings for all commands and system messages
+### `connection-config.yml`
+
+| Key | Description |
+|---|---|
+| `api-base-url` | Base URL of the Craftalism API. |
+| `auth-issuer-uri` | OAuth2 issuer URI (Authorization Server). |
+| `auth-token-path` | Token endpoint path relative to the issuer URI. |
+| `client-id` | OAuth2 client ID. |
+| `client-secret` | OAuth2 client secret. **Use environment variable override in production.** |
+| `client-scopes` | Space-separated list of requested scopes. |
+| HTTP timeouts | Connection and read timeout values. |
+
+### `logs.yml`
+
+All player-facing message templates and command output prefixes.
 
 ### Environment variable overrides
 
-`ConfigLoader` supports environment overrides for connection/auth values:
+`ConfigLoader` reads the following variables and applies them over `connection-config.yml` values at startup.
 
-- `CRAFTALISM_API_URL`
-- `AUTH_ISSUER_URI`
-- `AUTH_TOKEN_PATH`
-- `MINECRAFT_CLIENT_ID`
-- `MINECRAFT_CLIENT_SECRET`
-- `CRAFTALISM_API_KEY` (fallback for client secret)
-- `MINECRAFT_CLIENT_SCOPES`
+| Variable | Overrides |
+|---|---|
+| `CRAFTALISM_API_URL` | `api-base-url` |
+| `AUTH_ISSUER_URI` | `auth-issuer-uri` |
+| `AUTH_TOKEN_PATH` | `auth-token-path` |
+| `MINECRAFT_CLIENT_ID` | `client-id` |
+| `MINECRAFT_CLIENT_SECRET` or `CRAFTALISM_API_KEY` | `client-secret` |
+| `MINECRAFT_CLIENT_SCOPES` | `client-scopes` |
 
-> In production, prefer environment variables for secrets instead of hardcoding `client-secret` in YAML.
-
----
-
-## Commands and permissions
-
-### Commands
-
-- `/pay <player> <amount>`
-- `/balance` or `/balance <player>`
-- `/setbalance <player> <amount>`
-- `/baltop`
-
-### Permissions
-
-- `craftalism.pay` (default: true)
-- `craftalism.balance.self` (default: true)
-- `craftalism.balance.other` (default: op)
-- `craftalism.setbalance` (default: op)
-- `craftalism.baltop` (default: true)
+> **Important:** Set `MINECRAFT_CLIENT_SECRET` (or `CRAFTALISM_API_KEY`) as an environment variable in production. Do not hardcode the client secret in `connection-config.yml`.
 
 ---
 
-## External API contract expected by plugin
+## Running Locally
 
-The plugin calls these endpoints:
-
-- `GET /api/players/{uuid}`
-- `GET /api/players/name/{name}`
-- `POST /api/players`
-
-- `GET /api/balances/{uuid}`
-- `POST /api/balances`
-- `PUT /api/balances/{uuid}/set`
-- `POST /api/balances/{uuid}/deposit?amount={amount}`
-- `POST /api/balances/{uuid}/withdraw?amount={amount}`
-- `GET /api/balances/top?limit={n}`
-
-- `POST /api/transactions`
-
-OAuth2 token retrieval is done via configured auth server + token path using client credentials flow.
-
----
-
-## Build and test
-
-From repository root:
+### Build
 
 ```bash
 cd java
 ./gradlew clean build
 ```
 
-Run tests:
+The plugin JAR is output to `java/build/libs/`.
+
+### Install
+
+1. Copy the generated JAR into your Paper server `plugins/` directory.
+2. Start the server once to generate the config files in `plugins/craftalism-economy/`.
+3. Edit `connection-config.yml` with the correct API and auth server URLs and credentials.
+4. Restart the server.
+
+For local development, start the Craftalism API and Authorization Server first, then point `connection-config.yml` at them before launching the Minecraft server.
+
+---
+
+## Commands and Permissions
+
+| Command | Permission | Default | Description |
+|---|---|---|---|
+| `/pay <player> <amount>` | `craftalism.pay` | true | Transfer funds to another player. |
+| `/balance [player]` (self) | `craftalism.balance.self` | true | Check your own balance. |
+| `/balance <player>` (other) | `craftalism.balance.other` | op | Check another player's balance. |
+| `/setbalance <player> <amount>` | `craftalism.setbalance` | op | Set a player's balance directly. |
+| `/baltop` | `craftalism.baltop` | true | List the top balances. |
+
+---
+
+## API Reference
+
+The plugin calls the following Craftalism API endpoints. All requests carry a Bearer token obtained via OAuth2 `client_credentials`.
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/players/{uuid}` | Look up a player by UUID. |
+| `GET` | `/api/players/name/{name}` | Look up a player by display name. |
+| `POST` | `/api/players` | Register a new player. |
+| `GET` | `/api/balances/{uuid}` | Get a player's balance. |
+| `POST` | `/api/balances` | Create a balance record. |
+| `PUT` | `/api/balances/{uuid}/set` | Set a player's balance. |
+| `POST` | `/api/balances/{uuid}/deposit` | Deposit funds. |
+| `POST` | `/api/balances/{uuid}/withdraw` | Withdraw funds. |
+| `GET` | `/api/balances/top` | Get top balances. |
+| `POST` | `/api/transactions` | Record a transaction. |
+
+### `/pay` flow
+
+1. Validate sender permissions and command arguments.
+2. Resolve the sender from cache or API; resolve the receiver by name from the API.
+3. Validate amount and reject self-payment.
+4. Withdraw from sender.
+5. Deposit to receiver.
+6. If deposit fails, attempt a rollback deposit back to the sender.
+7. Record the transaction as a best-effort operation (a recording failure does not revert a successful transfer).
+8. Map the result status to player-facing messages.
+
+---
+
+## Testing
 
 ```bash
 cd java
 ./gradlew test
 ```
 
----
-
-## Local development setup (plugin + API)
-
-1. Start the external economy API and OAuth2 issuer configured in `connection-config.yml`.
-2. Build the plugin JAR with Gradle.
-3. Copy generated JAR into your Paper server `plugins/` folder.
-4. Start server once to generate config files (if needed).
-5. Edit plugin configs in the server plugin data folder.
-6. Restart server and test commands in-game.
+Unit tests cover the presentation, application, domain, and infrastructure layers using JUnit 5, Mockito, and MockBukkit.
 
 ---
 
-## Repository structure
+## Project Structure
 
 ```text
-.
-├── README.md
-├── LICENSE
-└── java/
-    ├── build.gradle
-    ├── gradlew
-    ├── src/main/java/io/github/HenriqueMichelini/craftalism/economy/
+java/
+├── build.gradle
+├── gradlew
+└── src/
+    ├── main/java/io/github/HenriqueMichelini/craftalism/economy/
     │   ├── presentation/
     │   ├── application/
     │   ├── domain/
     │   └── infra/
-    ├── src/main/resources/
+    ├── main/resources/
     │   ├── plugin.yml
     │   ├── config.yml
     │   ├── connection-config.yml
     │   └── logs.yml
-    └── src/test/java/
+    └── test/java/
 ```
 
 ---
 
-## Current limitations / improvement opportunities
+## Known Limitations
 
-- `OnQuit` listener exists but is not registered in `EventRegistrar`.
-- `BootContainer#shutdown()` is currently a placeholder.
-- Integration/E2E tests against a real API are not included.
-- Some command input validation rules are strict/uneven (`/setbalance` currently accepts numeric digits only before scaling).
+- The `OnQuit` listener class exists but is not registered in `EventRegistrar`; player quit events are not handled.
+- `BootContainer#shutdown()` is a placeholder and does not perform any cleanup.
+- `/setbalance` input validation only accepts numeric digit strings before scaling; it does not accept decimal input.
+- No integration or end-to-end tests run against a real API instance.
+
+---
+
+## Roadmap
+
+- Register `OnQuit` in `EventRegistrar` and implement cache eviction on player disconnect.
+- Implement `BootContainer#shutdown()` to clean up HTTP client and cache resources.
+- Fix `/setbalance` to accept decimal input consistently with `/pay`.
+- Add integration tests against a live Craftalism API instance.
 
 ---
 
 ## License
 
-MIT License.
+MIT. See [`LICENSE`](./LICENSE) for details.
