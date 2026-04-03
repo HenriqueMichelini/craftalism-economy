@@ -32,6 +32,7 @@ public final class BootContainer {
 
     private PlayerApplicationService playerApplicationService;
     private BalanceApplicationService balanceApplicationService;
+    private ApplicationServiceFactory applicationServiceFactory;
 
     public BootContainer(CraftalismEconomy plugin, JavaPlugin javaPlugin) {
         this.plugin = plugin;
@@ -55,6 +56,7 @@ public final class BootContainer {
 
         long defaultBalance = configLoader.defaultBalance();
         ApplicationServiceFactory appFactory = new ApplicationServiceFactory(javaPlugin, apiFactory, defaultBalance);
+        this.applicationServiceFactory = appFactory;
 
         this.playerApplicationService = appFactory.getPlayerApplication();
         this.balanceApplicationService = appFactory.getBalanceApplication();
@@ -64,7 +66,9 @@ public final class BootContainer {
     }
 
     public void shutdown() {
-        // flush caches, send pending balances, etc
+        if (applicationServiceFactory != null) {
+            applicationServiceFactory.shutdown();
+        }
     }
 
     public CurrencyFormatter getCurrencyFormatter() {

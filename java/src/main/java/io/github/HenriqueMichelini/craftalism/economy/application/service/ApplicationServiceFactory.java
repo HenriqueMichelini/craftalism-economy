@@ -70,6 +70,7 @@ public final class ApplicationServiceFactory {
     }
 
     public void shutdown() {
-        // persist caches, shutdown http client, etc.
+        playerApp.clearCache();
+        balanceApp.clearCache();
     }
 }
