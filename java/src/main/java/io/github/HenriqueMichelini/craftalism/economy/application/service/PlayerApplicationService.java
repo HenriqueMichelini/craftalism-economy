@@ -93,4 +93,12 @@ public class PlayerApplicationService {
                     return player;
                 });
     }
+
+    public void evictCachedPlayer(UUID uuid) {
+        cache.delete(uuid);
+    }
+
+    public void clearCache() {
+        cache.clear();
+    }
 }

@@ -103,4 +103,8 @@ public class BalanceApplicationService {
     private <T> T throwAsCompletion(Throwable ex) {
         throw new CompletionException(AsyncExceptionResolver.unwrap(ex));
     }
+
+    public void clearCache() {
+        cache.clear();
+    }
 }

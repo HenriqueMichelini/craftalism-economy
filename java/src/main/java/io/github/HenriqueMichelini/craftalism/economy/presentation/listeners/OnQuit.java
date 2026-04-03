@@ -1,25 +1,24 @@
 package io.github.HenriqueMichelini.craftalism.economy.presentation.listeners;
 
-import io.github.HenriqueMichelini.craftalism.economy.infra.api.repository.PlayerCacheRepository;
+import io.github.HenriqueMichelini.craftalism.economy.application.service.PlayerApplicationService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.UUID;
 
-public class OnQuit {
-    private final PlayerCacheRepository cache;
+public class OnQuit implements Listener {
+    private final PlayerApplicationService playerService;
 
-    public OnQuit(PlayerCacheRepository cache) {
-        this.cache = cache;
+    public OnQuit(PlayerApplicationService playerService) {
+        this.playerService = playerService;
     }
 
     @EventHandler
-    public void OnPlayerQuit(PlayerJoinEvent event) {
+    public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-
         UUID uuid = player.getUniqueId();
-
-        cache.delete(uuid);
+        playerService.evictCachedPlayer(uuid);
     }
 }

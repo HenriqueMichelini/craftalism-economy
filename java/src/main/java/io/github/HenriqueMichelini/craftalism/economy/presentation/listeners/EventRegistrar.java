@@ -24,5 +24,9 @@ public class EventRegistrar {
                 new OnJoin(playerApplicationService, balanceApplicationService),
                 plugin
         );
+        plugin.getServer().getPluginManager().registerEvents(
+                new OnQuit(playerApplicationService),
+                plugin
+        );
     }
 }
