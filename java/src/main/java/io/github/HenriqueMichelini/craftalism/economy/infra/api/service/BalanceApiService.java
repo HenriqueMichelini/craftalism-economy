@@ -8,10 +8,7 @@ import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceRespo
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceSetRequestDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceUpdateRequestDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.TransferRequestDTO;
-import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.ApiException;
-import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.ApiServerException;
-import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
-import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.RateLimitException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.*;
 import io.github.HenriqueMichelini.craftalism.economy.infra.config.GsonFactory;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -50,7 +47,7 @@ public class BalanceApiService {
                 }
 
                 return CompletableFuture.failedFuture(
-                    mapStatusToException(status, body)
+                    mapTransferStatusToException(status, body)
                 );
             });
     }
@@ -169,7 +166,7 @@ public class BalanceApiService {
     public CompletableFuture<Void> transfer(UUID from, UUID to, long amount) {
         TransferRequestDTO dto = new TransferRequestDTO(from, to, amount);
         return http
-            .post("/api/transfers", gson.toJson(dto))
+            .post("/api/balances/transfer", gson.toJson(dto))
             .thenCompose(resp -> {
                 int status = resp.statusCode();
                 String body = resp.body();
@@ -179,7 +176,7 @@ public class BalanceApiService {
                 }
 
                 return CompletableFuture.failedFuture(
-                    mapStatusToException(status, body)
+                    mapTransferStatusToException(status, body)
                 );
             });
     }
@@ -260,6 +257,52 @@ public class BalanceApiService {
                 e
             );
         }
+    }
+
+    private ApiException mapTransferStatusToException(int status, String body) {
+        String normalizedBody = body == null ? "" : body.toLowerCase();
+
+        if (status == 400) {
+            return new TransferApiException(
+                inferTransferFailureReason(normalizedBody),
+                "Transfer validation failed (status=400). Body: " + safePreview(body)
+            );
+        }
+
+        if (status == 404 || status == 405 || status == 501) {
+            return new TransferEndpointUnavailableException(
+                "Transfer endpoint unavailable (status=" +
+                status +
+                "). Body: " +
+                safePreview(body)
+            );
+        }
+
+        return mapStatusToException(status, body);
+    }
+
+    private TransferFailureReason inferTransferFailureReason(String body) {
+        if (body.contains("insufficient") || body.contains("not_enough")) {
+            return TransferFailureReason.INSUFFICIENT_FUNDS;
+        }
+
+        if (body.contains("sender") && body.contains("not") && body.contains("found")) {
+            return TransferFailureReason.SENDER_NOT_FOUND;
+        }
+
+        if (body.contains("receiver") && body.contains("not") && body.contains("found")) {
+            return TransferFailureReason.RECEIVER_NOT_FOUND;
+        }
+
+        if (body.contains("duplicate") || body.contains("idempot")) {
+            return TransferFailureReason.DUPLICATE_REQUEST;
+        }
+
+        if (body.contains("invalid") || body.contains("validation") || body.contains("bad request")) {
+            return TransferFailureReason.INVALID_REQUEST;
+        }
+
+        return TransferFailureReason.GENERIC_FAILURE;
     }
 
     private ApiException mapStatusToException(int status, String body) {

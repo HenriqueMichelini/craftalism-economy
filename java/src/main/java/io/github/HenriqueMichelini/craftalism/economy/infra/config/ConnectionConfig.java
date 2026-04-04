@@ -70,4 +70,8 @@ public class ConnectionConfig {
     public int getHttpRequestTimeoutSeconds() {
         return connectionConfig.getInt("http-request-timeout-seconds", 10);
     }
+
+    public boolean isPayLegacyFallbackEnabled() {
+        return connectionConfig.getBoolean("pay-legacy-fallback-enabled", false);
+    }
 }

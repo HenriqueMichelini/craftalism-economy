@@ -67,6 +67,23 @@ public class PayMessages {
         pluginLogger.send(messageReceiver, "pay.error.insufficient_funds");
     }
 
+
+    public void sendPayTransferInvalidRequest(Player messageReceiver) {
+        pluginLogger.send(messageReceiver, "pay.error.transfer_invalid_request");
+    }
+
+    public void sendPayTransferDuplicate(Player messageReceiver) {
+        pluginLogger.send(messageReceiver, "pay.error.transfer_duplicate");
+    }
+
+    public void sendPayTransferUnavailable(Player messageReceiver) {
+        pluginLogger.send(messageReceiver, "pay.error.transfer_unavailable");
+    }
+
+    public void sendPayTransferTemporaryFailure(Player messageReceiver) {
+        pluginLogger.send(messageReceiver, "pay.error.transfer_temporary_failure");
+    }
+
     public void sendPayException(Player messageReceiver) {
         pluginLogger.send(messageReceiver, "pay.error.exception");
     }

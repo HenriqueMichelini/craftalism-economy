@@ -19,7 +19,8 @@ public final class ApplicationServiceFactory {
     public ApplicationServiceFactory(
             JavaPlugin plugin,
             ApiServiceFactory apis,
-            long defaultBalance
+            long defaultBalance,
+            boolean legacyPayFallbackEnabled
     ) {
         PlayerCacheRepository playerCache = new PlayerCacheRepository();
         BalanceCacheRepository balanceCache = new BalanceCacheRepository();
@@ -31,7 +32,11 @@ public final class ApplicationServiceFactory {
         this.payCmdApp = new PayCommandApplicationService(
                 playerApp,
                 apis.getPlayerApi(),
-                apis.getBalanceApi(),
+                new PaymentTransferService(
+                        apis.getBalanceApi(),
+                        legacyPayFallbackEnabled,
+                        plugin.getLogger()
+                ),
                 plugin.getLogger()
         );
 

@@ -33,6 +33,22 @@ public record PayExecutionResult(
         return error(PayStatus.CANNOT_PAY_SELF);
     }
 
+    public static PayExecutionResult transferDuplicate() {
+        return error(PayStatus.TRANSFER_DUPLICATE);
+    }
+
+    public static PayExecutionResult transferInvalidRequest() {
+        return error(PayStatus.TRANSFER_INVALID_REQUEST);
+    }
+
+    public static PayExecutionResult transferTemporarilyUnavailable() {
+        return error(PayStatus.TRANSFER_TEMPORARILY_UNAVAILABLE);
+    }
+
+    public static PayExecutionResult transferEndpointUnavailable() {
+        return error(PayStatus.TRANSFER_ENDPOINT_UNAVAILABLE);
+    }
+
     public static PayExecutionResult exception() {
         return error(PayStatus.ERROR);
     }

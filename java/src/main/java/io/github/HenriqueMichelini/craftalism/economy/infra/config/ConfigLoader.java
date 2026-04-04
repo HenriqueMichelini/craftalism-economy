@@ -129,6 +129,11 @@ public final class ConfigLoader {
         return connectionConfig.getScopes();
     }
 
+
+    public boolean payLegacyFallbackEnabled() {
+        return connectionConfig.isPayLegacyFallbackEnabled();
+    }
+
     public int httpConnectTimeoutSeconds() {
         return normalizeTimeout(
             connectionConfig.getHttpConnectTimeoutSeconds(),
