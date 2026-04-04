@@ -7,6 +7,7 @@ import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceCreat
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceResponseDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceSetRequestDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceUpdateRequestDTO;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.TransferRequestDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.ApiException;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.ApiServerException;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
@@ -156,6 +157,24 @@ public class BalanceApiService {
                 String body = resp.body();
 
                 if (status == 200 || status == 204) {
+                    return CompletableFuture.completedFuture(null);
+                }
+
+                return CompletableFuture.failedFuture(
+                    mapStatusToException(status, body)
+                );
+            });
+    }
+
+    public CompletableFuture<Void> transfer(UUID from, UUID to, long amount) {
+        TransferRequestDTO dto = new TransferRequestDTO(from, to, amount);
+        return http
+            .post("/api/transfers", gson.toJson(dto))
+            .thenCompose(resp -> {
+                int status = resp.statusCode();
+                String body = resp.body();
+
+                if (status == 200 || status == 201 || status == 204) {
                     return CompletableFuture.completedFuture(null);
                 }
 

@@ -32,7 +32,6 @@ public final class ApplicationServiceFactory {
                 playerApp,
                 apis.getPlayerApi(),
                 apis.getBalanceApi(),
-                apis.getTransactionApi(),
                 plugin.getLogger()
         );
 

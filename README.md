@@ -14,7 +14,7 @@ Instead of storing balances inside the Minecraft server, this plugin acts as an 
 - Fully asynchronous command execution via `CompletableFuture` to avoid blocking the main server thread.
 - OAuth2 `client_credentials` authentication with automatic token caching.
 - Caffeine-based in-memory cache for players and balances to reduce API round-trips.
-- Rollback logic for `/pay`: if the deposit to the receiver fails after a successful withdrawal from the sender, the plugin attempts to reverse the withdrawal.
+- Atomic `/pay` execution through a single API transfer request.
 - Automatic player and balance provisioning on player join.
 - Config-driven currency formatting (locale, symbol, fallback representation).
 - YAML-driven player-facing message templates.
@@ -168,19 +168,17 @@ The plugin calls the following Craftalism API endpoints. All requests carry a Be
 | `PUT` | `/api/balances/{uuid}/set` | Set a player's balance. |
 | `POST` | `/api/balances/{uuid}/deposit` | Deposit funds. |
 | `POST` | `/api/balances/{uuid}/withdraw` | Withdraw funds. |
+| `POST` | `/api/transfers` | Execute an atomic player-to-player transfer. |
 | `GET` | `/api/balances/top` | Get top balances. |
-| `POST` | `/api/transactions` | Record a transaction. |
 
 ### `/pay` flow
 
 1. Validate sender permissions and command arguments.
 2. Resolve the sender from cache or API; resolve the receiver by name from the API.
 3. Validate amount and reject self-payment.
-4. Withdraw from sender.
-5. Deposit to receiver.
-6. If deposit fails, attempt a rollback deposit back to the sender.
-7. Record the transaction as a best-effort operation (a recording failure does not revert a successful transfer).
-8. Map the result status to player-facing messages.
+4. Verify the sender has enough balance.
+5. Submit a single atomic transfer request to the API.
+6. Map the result status to player-facing messages.
 
 ---
 
