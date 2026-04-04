@@ -10,11 +10,8 @@ import static org.mockito.Mockito.when;
 import io.github.HenriqueMichelini.craftalism.economy.application.dto.PayExecutionResult;
 import io.github.HenriqueMichelini.craftalism.economy.domain.model.Player;
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.enums.PayStatus;
-import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceResponseDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.PlayerResponseDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
-import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.BalanceApiService;
-import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.PlayerApiService;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -33,10 +30,10 @@ class PayCommandApplicationServiceTest {
     private PlayerApplicationService playerService;
 
     @Mock
-    private PlayerApiService playerApi;
+    private io.github.HenriqueMichelini.craftalism.economy.infra.api.service.PlayerApiService playerApi;
 
     @Mock
-    private BalanceApiService balanceApi;
+    private PaymentTransferService paymentTransferService;
 
     @Mock
     private java.util.logging.Logger logger;
@@ -58,7 +55,7 @@ class PayCommandApplicationServiceTest {
             new PayCommandApplicationService(
                 playerService,
                 playerApi,
-                balanceApi,
+                paymentTransferService,
                 logger
             );
 
@@ -68,11 +65,7 @@ class PayCommandApplicationServiceTest {
         receiverName = "Receiver";
         validAmount = 100_0000L;
         payerPlayer = new Player(payerUuid, payerName, Instant.now());
-        receiverDTO = new PlayerResponseDTO(
-            receiverUuid,
-            receiverName,
-            Instant.now()
-        );
+        receiverDTO = new PlayerResponseDTO(receiverUuid, receiverName, Instant.now());
     }
 
     @AfterEach
@@ -81,20 +74,15 @@ class PayCommandApplicationServiceTest {
     }
 
     @Test
-    void shouldCompleteSuccessfulPayment()
-        throws ExecutionException, InterruptedException {
-        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, 500_0000L);
+    void shouldCompleteSuccessfulPayment() throws ExecutionException, InterruptedException {
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
         );
         when(playerApi.getPlayerByName(receiverName)).thenReturn(
             CompletableFuture.completedFuture(receiverDTO)
         );
-        when(balanceApi.getBalance(payerUuid)).thenReturn(
-            CompletableFuture.completedFuture(dto)
-        );
-        when(balanceApi.transfer(payerUuid, receiverUuid, validAmount)).thenReturn(
-            CompletableFuture.completedFuture(null)
+        when(paymentTransferService.execute(payerUuid, receiverUuid, validAmount)).thenReturn(
+            CompletableFuture.completedFuture(PayExecutionResult.success(receiverUuid))
         );
 
         PayExecutionResult result = service
@@ -102,46 +90,19 @@ class PayCommandApplicationServiceTest {
             .get();
 
         assertEquals(PayStatus.SUCCESS, result.getStatus());
-        verify(balanceApi).transfer(payerUuid, receiverUuid, validAmount);
+        verify(paymentTransferService).execute(payerUuid, receiverUuid, validAmount);
     }
 
     @Test
-    void shouldRejectPaymentWhenInsufficientFunds()
-        throws ExecutionException, InterruptedException {
-        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, 50_0000L);
+    void shouldReturnErrorWhenTransferFails() throws ExecutionException, InterruptedException {
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
         );
         when(playerApi.getPlayerByName(receiverName)).thenReturn(
             CompletableFuture.completedFuture(receiverDTO)
         );
-        when(balanceApi.getBalance(payerUuid)).thenReturn(
-            CompletableFuture.completedFuture(dto)
-        );
-
-        PayExecutionResult result = service
-            .execute(payerUuid, payerName, receiverName, validAmount)
-            .get();
-
-        assertEquals(PayStatus.NOT_ENOUGH_FUNDS, result.getStatus());
-        verify(balanceApi, never()).transfer(any(), any(), anyLong());
-    }
-
-    @Test
-    void shouldReturnErrorWhenTransferFails()
-        throws ExecutionException, InterruptedException {
-        BalanceResponseDTO dto = new BalanceResponseDTO(payerUuid, 500_0000L);
-        when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
-            CompletableFuture.completedFuture(payerPlayer)
-        );
-        when(playerApi.getPlayerByName(receiverName)).thenReturn(
-            CompletableFuture.completedFuture(receiverDTO)
-        );
-        when(balanceApi.getBalance(payerUuid)).thenReturn(
-            CompletableFuture.completedFuture(dto)
-        );
-        when(balanceApi.transfer(payerUuid, receiverUuid, validAmount)).thenReturn(
-            CompletableFuture.failedFuture(new RuntimeException("Transfer failed"))
+        when(paymentTransferService.execute(payerUuid, receiverUuid, validAmount)).thenReturn(
+            CompletableFuture.completedFuture(PayExecutionResult.exception())
         );
 
         PayExecutionResult result = service
@@ -153,11 +114,7 @@ class PayCommandApplicationServiceTest {
 
     @Test
     void shouldRejectSelfPayment() throws ExecutionException, InterruptedException {
-        PlayerResponseDTO selfDTO = new PlayerResponseDTO(
-            payerUuid,
-            payerName,
-            Instant.now()
-        );
+        PlayerResponseDTO selfDTO = new PlayerResponseDTO(payerUuid, payerName, Instant.now());
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
         );
@@ -170,19 +127,16 @@ class PayCommandApplicationServiceTest {
             .get();
 
         assertEquals(PayStatus.CANNOT_PAY_SELF, result.getStatus());
-        verify(balanceApi, never()).transfer(any(), any(), anyLong());
+        verify(paymentTransferService, never()).execute(any(), any(), anyLong());
     }
 
     @Test
-    void shouldReturnTargetNotFoundWhenReceiverNotFound()
-        throws ExecutionException, InterruptedException {
+    void shouldReturnTargetNotFoundWhenReceiverNotFound() throws ExecutionException, InterruptedException {
         when(playerService.getCachedOrFetch(payerUuid, payerName)).thenReturn(
             CompletableFuture.completedFuture(payerPlayer)
         );
         when(playerApi.getPlayerByName(receiverName)).thenReturn(
-            CompletableFuture.failedFuture(
-                new NotFoundException("Player not found")
-            )
+            CompletableFuture.failedFuture(new NotFoundException("Player not found"))
         );
 
         PayExecutionResult result = service

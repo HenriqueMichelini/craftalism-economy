@@ -55,7 +55,12 @@ public final class BootContainer {
         this.transactionApiService = apiFactory.getTransactionApi();
 
         long defaultBalance = configLoader.defaultBalance();
-        ApplicationServiceFactory appFactory = new ApplicationServiceFactory(javaPlugin, apiFactory, defaultBalance);
+        ApplicationServiceFactory appFactory = new ApplicationServiceFactory(
+            javaPlugin,
+            apiFactory,
+            defaultBalance,
+            configLoader.payLegacyFallbackEnabled()
+        );
         this.applicationServiceFactory = appFactory;
 
         this.playerApplicationService = appFactory.getPlayerApplication();

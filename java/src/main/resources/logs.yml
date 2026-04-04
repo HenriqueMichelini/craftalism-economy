@@ -46,6 +46,10 @@ pay:
     self_payment: "&cYou cannot pay yourself."
     usage: "&cUsage: /pay <player> <amount>"
     no_permission: "&cYou don't have permission to use this command."
+    transfer_invalid_request: "&cInvalid transfer request. Check the amount and target player."
+    transfer_duplicate: "&eThis payment was already processed recently."
+    transfer_unavailable: "&cThe server payment transfer service is unavailable. Contact an administrator."
+    transfer_temporary_failure: "&cThe payment service is temporarily unavailable. Try again in a moment."
 
 setbalance:
   success:

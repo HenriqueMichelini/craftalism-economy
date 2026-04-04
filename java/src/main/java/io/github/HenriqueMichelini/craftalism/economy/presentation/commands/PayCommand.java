@@ -120,6 +120,10 @@ public class PayCommand implements CommandExecutor {
                         player
                     );
                     case CANNOT_PAY_SELF -> messages.sendPaySelfPayment(player);
+                    case TRANSFER_INVALID_REQUEST -> messages.sendPayTransferInvalidRequest(player);
+                    case TRANSFER_DUPLICATE -> messages.sendPayTransferDuplicate(player);
+                    case TRANSFER_ENDPOINT_UNAVAILABLE -> messages.sendPayTransferUnavailable(player);
+                    case TRANSFER_TEMPORARILY_UNAVAILABLE -> messages.sendPayTransferTemporaryFailure(player);
                     default -> messages.sendPayException(player);
                 }
             });

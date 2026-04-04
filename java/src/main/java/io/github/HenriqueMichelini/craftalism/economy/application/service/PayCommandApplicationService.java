@@ -5,7 +5,6 @@ import io.github.HenriqueMichelini.craftalism.economy.domain.model.Player;
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.enums.PayStatus;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.PlayerResponseDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
-import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.BalanceApiService;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.PlayerApiService;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -15,18 +14,18 @@ public class PayCommandApplicationService {
 
     private final PlayerApplicationService playerService;
     private final PlayerApiService playerApi;
-    private final BalanceApiService balanceApi;
+    private final PaymentTransferService paymentTransferService;
     private final Logger logger;
 
     public PayCommandApplicationService(
         PlayerApplicationService playerService,
         PlayerApiService playerApi,
-        BalanceApiService balanceApi,
+        PaymentTransferService paymentTransferService,
         Logger logger
     ) {
         this.playerService = playerService;
         this.playerApi = playerApi;
-        this.balanceApi = balanceApi;
+        this.paymentTransferService = paymentTransferService;
         this.logger = logger;
     }
 
@@ -60,19 +59,13 @@ public class PayCommandApplicationService {
     ) {
         PayStatus validationResult = validatePayment(payer, receiver, amount);
         if (validationResult != PayStatus.SUCCESS) {
-            return CompletableFuture.completedFuture(
-                mapStatusToResult(validationResult)
-            );
+            return CompletableFuture.completedFuture(mapStatusToResult(validationResult));
         }
 
-        return executeTransfer(payer.getUuid(), receiver.uuid(), amount);
+        return paymentTransferService.execute(payer.getUuid(), receiver.uuid(), amount);
     }
 
-    private PayStatus validatePayment(
-        Player payer,
-        PlayerResponseDTO receiver,
-        long amount
-    ) {
+    private PayStatus validatePayment(Player payer, PlayerResponseDTO receiver, long amount) {
         if (payer.getUuid().equals(receiver.uuid())) {
             return PayStatus.CANNOT_PAY_SELF;
         }
@@ -84,42 +77,6 @@ public class PayCommandApplicationService {
         return PayStatus.SUCCESS;
     }
 
-    private CompletableFuture<PayExecutionResult> executeTransfer(
-        UUID payerUuid,
-        UUID receiverUuid,
-        long amount
-    ) {
-        return balanceApi
-            .getBalance(payerUuid)
-            .thenCompose(balance ->
-                checkBalanceAndTransfer(
-                    payerUuid,
-                    receiverUuid,
-                    amount,
-                    balance.amount()
-                )
-            )
-            .exceptionally(ex -> handleTransferException(ex, "balance check"));
-    }
-
-    private CompletableFuture<PayExecutionResult> checkBalanceAndTransfer(
-        UUID payerUuid,
-        UUID receiverUuid,
-        long amount,
-        long currentBalance
-    ) {
-        if (currentBalance < amount) {
-            return CompletableFuture.completedFuture(
-                PayExecutionResult.notEnoughFunds()
-            );
-        }
-
-        return balanceApi
-            .transfer(payerUuid, receiverUuid, amount)
-            .thenApply(v -> PayExecutionResult.success(receiverUuid))
-            .exceptionally(ex -> handleTransferException(ex, "transfer"));
-    }
-
     private PayExecutionResult mapStatusToResult(PayStatus status) {
         return switch (status) {
             case CANNOT_PAY_SELF -> PayExecutionResult.cannotPaySelf();
@@ -128,18 +85,6 @@ public class PayCommandApplicationService {
             case TARGET_NOT_FOUND -> PayExecutionResult.targetNotFound();
             default -> PayExecutionResult.exception();
         };
-    }
-
-    private PayExecutionResult handleTransferException(Throwable ex, String phase) {
-        Throwable cause = AsyncExceptionResolver.unwrap(ex);
-
-        if (cause instanceof NotFoundException) {
-            logError("Player not found during " + phase, cause);
-            return PayExecutionResult.targetNotFound();
-        }
-
-        logError("Unexpected error during " + phase, cause);
-        return PayExecutionResult.exception();
     }
 
     private PayExecutionResult handleReceiverLookupException(Throwable ex) {
