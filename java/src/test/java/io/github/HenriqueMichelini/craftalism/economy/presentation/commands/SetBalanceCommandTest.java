@@ -117,9 +117,9 @@ class SetBalanceCommandTest {
     }
 
     @Test
-    @DisplayName("should reject non numeric amount")
+    @DisplayName("should reject invalid decimal amount precision")
     void shouldRejectNonNumericAmount() {
-        boolean result = setBalanceCommand.onCommand(sender, command, "setbalance", new String[]{"Target", "10.5"});
+        boolean result = setBalanceCommand.onCommand(sender, command, "setbalance", new String[]{"Target", "10.555"});
 
         assertTrue(result);
         verify(messages).sendSetBalanceInvalidAmount(sender);

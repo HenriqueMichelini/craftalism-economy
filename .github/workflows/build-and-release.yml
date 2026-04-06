@@ -30,7 +30,7 @@ jobs:
 
       - name: Build with Gradle
         working-directory: java
-        run: ./gradlew build -x test --no-daemon
+        run: ./gradlew build --no-daemon
 
       - name: Get version from tag
         id: version

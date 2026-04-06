@@ -70,7 +70,7 @@ public class SetBalanceCommand implements CommandExecutor {
             return true;
         }
 
-        if (!amountStr.matches("\\d+")) {
+        if (!amountStr.matches("\\d+(\\.\\d{1,2})?")) {
             messages.sendSetBalanceInvalidAmount(sender);
             return true;
         }

@@ -3,10 +3,12 @@ package io.github.HenriqueMichelini.craftalism.economy.presentation.commands;
 import io.github.HenriqueMichelini.craftalism.economy.application.service.BaltopCommandApplicationService;
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.CurrencyFormatter;
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.BaltopMessages;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -17,11 +19,13 @@ public class BaltopCommand implements CommandExecutor {
     private final BaltopMessages messages;
     private final BaltopCommandApplicationService service;
     private final CurrencyFormatter formatter;
+    private final JavaPlugin plugin;
 
-    public BaltopCommand(BaltopMessages messages, BaltopCommandApplicationService service, CurrencyFormatter formatter) {
+    public BaltopCommand(BaltopMessages messages, BaltopCommandApplicationService service, CurrencyFormatter formatter, JavaPlugin plugin) {
         this.messages = messages;
         this.service = service;
         this.formatter = formatter;
+        this.plugin = plugin;
     }
 
     @Override
@@ -43,10 +47,10 @@ public class BaltopCommand implements CommandExecutor {
 
         messages.sendBaltopLoading(player);
 
-        service.getTop10().thenAccept(entries -> {
-            displayBaltop(player, entries);
-        }).exceptionally(ex -> {
-            messages.sendBaltopError(player);
+        service.getTop10().thenAccept(entries ->
+            Bukkit.getScheduler().runTask(plugin, () -> displayBaltop(player, entries))
+        ).exceptionally(ex -> {
+            Bukkit.getScheduler().runTask(plugin, () -> messages.sendBaltopError(player));
             return null;
         });
 
@@ -58,7 +62,6 @@ public class BaltopCommand implements CommandExecutor {
 
         int position = 1;
         for (BaltopCommandApplicationService.BaltopEntry entry : entries) {
-            System.out.println("API raw = " + entry.getBalance());
             String formattedBalance = formatter.formatCurrency(entry.getBalance());
             messages.sendBaltopEntry(player, String.valueOf(position), entry.getPlayerName(), formattedBalance);
             position++;

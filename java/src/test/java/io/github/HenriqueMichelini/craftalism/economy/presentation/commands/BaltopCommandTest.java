@@ -4,14 +4,18 @@ import io.github.HenriqueMichelini.craftalism.economy.application.service.Baltop
 import io.github.HenriqueMichelini.craftalism.economy.application.service.BaltopCommandApplicationService.BaltopEntry;
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.CurrencyFormatter;
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.BaltopMessages;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
@@ -31,6 +35,10 @@ class  BaltopCommandTest {
     private BaltopCommandApplicationService service;
     @Mock
     private CurrencyFormatter formatter;
+    @Mock
+    private JavaPlugin plugin;
+    @Mock
+    private BukkitScheduler scheduler;
 
     private BaltopCommand command;
 
@@ -42,16 +50,26 @@ class  BaltopCommandTest {
     private Command mockCommand;
 
     private AutoCloseable mocks;
+    private MockedStatic<Bukkit> bukkitStatic;
 
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-        command = new BaltopCommand(messages, service, formatter);
+        bukkitStatic = mockStatic(Bukkit.class);
+        bukkitStatic.when(Bukkit::getScheduler).thenReturn(scheduler);
+        when(scheduler.runTask(eq(plugin), any(Runnable.class))).thenAnswer(invocation -> {
+            Runnable task = invocation.getArgument(1);
+            task.run();
+            return null;
+        });
+
+        command = new BaltopCommand(messages, service, formatter, plugin);
         when(player.hasPermission(anyString())).thenReturn(true);
     }
 
     @AfterEach
     void tearDown() throws Exception {
+        bukkitStatic.close();
         mocks.close();
     }
 
