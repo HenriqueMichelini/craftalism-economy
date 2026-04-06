@@ -91,13 +91,14 @@ Configuration files are bundled in the JAR and written to the plugin data folder
 
 | Key | Description |
 |---|---|
-| `api-base-url` | Base URL of the Craftalism API. |
-| `auth-issuer-uri` | OAuth2 issuer URI (Authorization Server). |
-| `auth-token-path` | Token endpoint path relative to the issuer URI. |
+| `url` | Base URL of the Craftalism API. |
+| `auth-server-url` | OAuth2 issuer URI (Authorization Server). |
+| `token-path` | Token endpoint path relative to the issuer URI. |
 | `client-id` | OAuth2 client ID. |
 | `client-secret` | OAuth2 client secret. **Use environment variable override in production.** |
-| `client-scopes` | Space-separated list of requested scopes. |
+| `scopes` | Space-separated list of requested scopes. |
 | HTTP timeouts | Connection and read timeout values. |
+| `pay-legacy-fallback-enabled` | Enables legacy withdraw/deposit fallback if transfer endpoint is unavailable. |
 
 ### `logs.yml`
 
@@ -109,12 +110,12 @@ All player-facing message templates and command output prefixes.
 
 | Variable | Overrides |
 |---|---|
-| `CRAFTALISM_API_URL` | `api-base-url` |
-| `AUTH_ISSUER_URI` | `auth-issuer-uri` |
-| `AUTH_TOKEN_PATH` | `auth-token-path` |
+| `CRAFTALISM_API_URL` | `url` |
+| `AUTH_ISSUER_URI` | `auth-server-url` |
+| `AUTH_TOKEN_PATH` | `token-path` |
 | `MINECRAFT_CLIENT_ID` | `client-id` |
 | `MINECRAFT_CLIENT_SECRET` or `CRAFTALISM_API_KEY` | `client-secret` |
-| `MINECRAFT_CLIENT_SCOPES` | `client-scopes` |
+| `MINECRAFT_CLIENT_SCOPES` | `scopes` |
 
 > **Important:** Set `MINECRAFT_CLIENT_SECRET` (or `CRAFTALISM_API_KEY`) as an environment variable in production. Do not hardcode the client secret in `connection-config.yml`.
 
@@ -168,7 +169,7 @@ The plugin calls the following Craftalism API endpoints. All requests carry a Be
 | `PUT` | `/api/balances/{uuid}/set` | Set a player's balance. |
 | `POST` | `/api/balances/{uuid}/deposit` | Deposit funds. |
 | `POST` | `/api/balances/{uuid}/withdraw` | Withdraw funds. |
-| `POST` | `/api/transfers` | Execute an atomic player-to-player transfer. |
+| `POST` | `/api/balances/transfer` | Execute an atomic player-to-player transfer. |
 | `GET` | `/api/balances/top` | Get top balances. |
 
 ### `/pay` flow
@@ -217,18 +218,12 @@ java/
 
 ## Known Limitations
 
-- The `OnQuit` listener class exists but is not registered in `EventRegistrar`; player quit events are not handled.
-- `BootContainer#shutdown()` is a placeholder and does not perform any cleanup.
-- `/setbalance` input validation only accepts numeric digit strings before scaling; it does not accept decimal input.
 - No integration or end-to-end tests run against a real API instance.
 
 ---
 
 ## Roadmap
 
-- Register `OnQuit` in `EventRegistrar` and implement cache eviction on player disconnect.
-- Implement `BootContainer#shutdown()` to clean up HTTP client and cache resources.
-- Fix `/setbalance` to accept decimal input consistently with `/pay`.
 - Add integration tests against a live Craftalism API instance.
 
 ---

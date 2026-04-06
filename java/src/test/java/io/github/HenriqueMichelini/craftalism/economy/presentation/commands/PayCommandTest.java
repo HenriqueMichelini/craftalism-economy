@@ -10,6 +10,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +40,10 @@ class PayCommandTest {
     private PlayerNameCheck playerNameCheck;
     @Mock
     private CurrencyFormatter formatter;
+    @Mock
+    private JavaPlugin plugin;
+    @Mock
+    private BukkitScheduler scheduler;
 
     @Mock
     private Player player;
@@ -50,11 +56,20 @@ class PayCommandTest {
 
     private PayCommand payCommand;
     private AutoCloseable mocks;
+    private MockedStatic<Bukkit> bukkitStatic;
 
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-        payCommand = new PayCommand(messages, payService, transactionService, playerNameCheck, formatter);
+        bukkitStatic = mockStatic(Bukkit.class);
+        bukkitStatic.when(Bukkit::getScheduler).thenReturn(scheduler);
+        when(scheduler.runTask(eq(plugin), any(Runnable.class))).thenAnswer(invocation -> {
+            Runnable task = invocation.getArgument(1);
+            task.run();
+            return null;
+        });
+
+        payCommand = new PayCommand(messages, payService, transactionService, playerNameCheck, formatter, plugin);
 
         when(player.getUniqueId()).thenReturn(UUID.randomUUID());
         when(player.getName()).thenReturn("Sender");
@@ -66,6 +81,7 @@ class PayCommandTest {
 
     @AfterEach
     void tearDown() throws Exception {
+        bukkitStatic.close();
         mocks.close();
     }
 
@@ -118,16 +134,14 @@ class PayCommandTest {
                 .thenReturn(CompletableFuture.completedFuture(PayExecutionResult.success(UUID.randomUUID())));
         when(receiver.isOnline()).thenReturn(true);
 
-        try (MockedStatic<Bukkit> bukkit = mockStatic(Bukkit.class)) {
-            bukkit.when(() -> Bukkit.getPlayer("Target")).thenReturn(receiver);
+        bukkitStatic.when(() -> Bukkit.getPlayer("Target")).thenReturn(receiver);
 
-            boolean result = payCommand.onCommand(player, command, "pay", new String[]{"Target", "1"});
+        boolean result = payCommand.onCommand(player, command, "pay", new String[]{"Target", "1"});
 
-            assertTrue(result);
-            verify(payService).execute(eq(player.getUniqueId()), eq("Sender"), eq("Target"), eq(1_0000L));
-            verify(messages).sendPaySuccessSender(player, "$1.00", "Target");
-            verify(messages).sendPaySuccessReceiver(receiver, "$1.00", "Sender");
-        }
+        assertTrue(result);
+        verify(payService).execute(eq(player.getUniqueId()), eq("Sender"), eq("Target"), eq(1_0000L));
+        verify(messages).sendPaySuccessSender(player, "$1.00", "Target");
+        verify(messages).sendPaySuccessReceiver(receiver, "$1.00", "Sender");
     }
 
     @Test

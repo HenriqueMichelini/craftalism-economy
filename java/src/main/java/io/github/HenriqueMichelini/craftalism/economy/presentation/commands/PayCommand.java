@@ -11,6 +11,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 public class PayCommand implements CommandExecutor {
@@ -21,18 +22,21 @@ public class PayCommand implements CommandExecutor {
     private final PayCommandApplicationService payService;
     private final PlayerNameCheck playerNameCheck;
     private final CurrencyFormatter formatter;
+    private final JavaPlugin plugin;
 
     public PayCommand(
         PayMessages messages,
         PayCommandApplicationService payService,
         TransactionApplicationService transactionService,
         PlayerNameCheck playerNameCheck,
-        CurrencyFormatter formatter
+        CurrencyFormatter formatter,
+        JavaPlugin plugin
     ) {
         this.messages = messages;
         this.payService = payService;
         this.playerNameCheck = playerNameCheck;
         this.formatter = formatter;
+        this.plugin = plugin;
     }
 
     @Override
@@ -92,41 +96,43 @@ public class PayCommand implements CommandExecutor {
 
         payService
             .execute(player.getUniqueId(), player.getName(), targetName, amount)
-            .thenAccept(result -> {
-                switch (result.getStatus()) {
-                    case SUCCESS -> {
-                        messages.sendPaySuccessSender(
-                            player,
-                            formatter.formatCurrency(amount),
-                            targetName
-                        );
-
-                        Player targetPlayer = Bukkit.getPlayer(targetName);
-                        if (targetPlayer != null && targetPlayer.isOnline()) {
-                            messages.sendPaySuccessReceiver(
-                                targetPlayer,
+            .thenAccept(result ->
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    switch (result.getStatus()) {
+                        case SUCCESS -> {
+                            messages.sendPaySuccessSender(
+                                player,
                                 formatter.formatCurrency(amount),
-                                player.getName()
+                                targetName
                             );
+
+                            Player targetPlayer = Bukkit.getPlayer(targetName);
+                            if (targetPlayer != null && targetPlayer.isOnline()) {
+                                messages.sendPaySuccessReceiver(
+                                    targetPlayer,
+                                    formatter.formatCurrency(amount),
+                                    player.getName()
+                                );
+                            }
                         }
+                        case TARGET_NOT_FOUND -> messages.sendPayPlayerNotFound(
+                            player
+                        );
+                        case NOT_ENOUGH_FUNDS -> messages.sendPayInsufficientFunds(
+                            player
+                        );
+                        case INVALID_AMOUNT -> messages.sendPayInvalidAmount(
+                            player
+                        );
+                        case CANNOT_PAY_SELF -> messages.sendPaySelfPayment(player);
+                        case TRANSFER_INVALID_REQUEST -> messages.sendPayTransferInvalidRequest(player);
+                        case TRANSFER_DUPLICATE -> messages.sendPayTransferDuplicate(player);
+                        case TRANSFER_ENDPOINT_UNAVAILABLE -> messages.sendPayTransferUnavailable(player);
+                        case TRANSFER_TEMPORARILY_UNAVAILABLE -> messages.sendPayTransferTemporaryFailure(player);
+                        default -> messages.sendPayException(player);
                     }
-                    case TARGET_NOT_FOUND -> messages.sendPayPlayerNotFound(
-                        player
-                    );
-                    case NOT_ENOUGH_FUNDS -> messages.sendPayInsufficientFunds(
-                        player
-                    );
-                    case INVALID_AMOUNT -> messages.sendPayInvalidAmount(
-                        player
-                    );
-                    case CANNOT_PAY_SELF -> messages.sendPaySelfPayment(player);
-                    case TRANSFER_INVALID_REQUEST -> messages.sendPayTransferInvalidRequest(player);
-                    case TRANSFER_DUPLICATE -> messages.sendPayTransferDuplicate(player);
-                    case TRANSFER_ENDPOINT_UNAVAILABLE -> messages.sendPayTransferUnavailable(player);
-                    case TRANSFER_TEMPORARILY_UNAVAILABLE -> messages.sendPayTransferTemporaryFailure(player);
-                    default -> messages.sendPayException(player);
-                }
-            });
+                })
+            );
 
         return true;
     }

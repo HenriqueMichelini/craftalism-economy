@@ -5,13 +5,17 @@ import io.github.HenriqueMichelini.craftalism.economy.application.service.Balanc
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.CurrencyFormatter;
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.BalanceMessages;
 import io.github.HenriqueMichelini.craftalism.economy.presentation.validation.PlayerNameCheck;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
 import java.util.UUID;
@@ -25,6 +29,8 @@ class BalanceCommandTest {
     @Mock private PlayerNameCheck playerNameCheck;
     @Mock private BalanceCommandApplicationService balanceService;
     @Mock private CurrencyFormatter formatter;
+    @Mock private JavaPlugin plugin;
+    @Mock private BukkitScheduler scheduler;
     @Mock private Player player;
     @Mock private ConsoleCommandSender console;
     @Mock private Command command;
@@ -33,11 +39,20 @@ class BalanceCommandTest {
     private final UUID playerUuid = UUID.randomUUID();
 
     private AutoCloseable mocks;
+    private MockedStatic<Bukkit> bukkitStatic;
 
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-        balanceCommand = new BalanceCommand(messages, playerNameCheck, balanceService, formatter);
+        bukkitStatic = mockStatic(Bukkit.class);
+        bukkitStatic.when(Bukkit::getScheduler).thenReturn(scheduler);
+        when(scheduler.runTask(eq(plugin), any(Runnable.class))).thenAnswer(invocation -> {
+            Runnable task = invocation.getArgument(1);
+            task.run();
+            return null;
+        });
+
+        balanceCommand = new BalanceCommand(messages, playerNameCheck, balanceService, formatter, plugin);
         when(player.getUniqueId()).thenReturn(playerUuid);
         when(player.getName()).thenReturn("TestPlayer");
 
@@ -47,6 +62,7 @@ class BalanceCommandTest {
 
     @AfterEach
     void tearDown() throws Exception {
+        bukkitStatic.close();
         mocks.close();
     }
 

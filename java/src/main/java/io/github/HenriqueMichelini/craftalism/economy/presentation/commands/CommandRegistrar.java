@@ -41,7 +41,8 @@ public final class CommandRegistrar {
                 apps.getPayCommandApplication(),
                 apps.getTransactionApplication(),
                 playerNameCheck,
-                formatters.getFormatter()
+                formatters.getFormatter(),
+                plugin
             )
         );
         register(
@@ -50,7 +51,8 @@ public final class CommandRegistrar {
                 new BalanceMessages(plugin.getPluginLogger()),
                 playerNameCheck,
                 apps.getBalanceCommandApplication(),
-                formatters.getFormatter()
+                formatters.getFormatter(),
+                plugin
             )
         );
         register(
@@ -58,7 +60,8 @@ public final class CommandRegistrar {
             new BaltopCommand(
                 new BaltopMessages(plugin.getPluginLogger()),
                 apps.getBaltopCommandApplication(),
-                formatters.getFormatter()
+                formatters.getFormatter(),
+                plugin
             )
         );
         register(

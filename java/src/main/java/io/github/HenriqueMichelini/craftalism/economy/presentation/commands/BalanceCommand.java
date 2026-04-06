@@ -5,10 +5,12 @@ import io.github.HenriqueMichelini.craftalism.economy.application.service.Balanc
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.currency.CurrencyFormatter;
 import io.github.HenriqueMichelini.craftalism.economy.domain.service.logs.messages.BalanceMessages;
 import io.github.HenriqueMichelini.craftalism.economy.presentation.validation.PlayerNameCheck;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 public class BalanceCommand implements CommandExecutor {
@@ -19,17 +21,20 @@ public class BalanceCommand implements CommandExecutor {
     private final PlayerNameCheck playerNameCheck;
     private final BalanceCommandApplicationService balanceService;
     private final CurrencyFormatter formatter;
+    private final JavaPlugin plugin;
 
     public BalanceCommand(
             BalanceMessages messages,
             PlayerNameCheck playerNameCheck,
             BalanceCommandApplicationService balanceService,
-            CurrencyFormatter formatter
+            CurrencyFormatter formatter,
+            JavaPlugin plugin
     ) {
         this.messages = messages;
         this.playerNameCheck = playerNameCheck;
         this.balanceService = balanceService;
         this.formatter = formatter;
+        this.plugin = plugin;
     }
 
     @Override
@@ -54,7 +59,7 @@ public class BalanceCommand implements CommandExecutor {
         }
 
         balanceService.executeSelf(player.getUniqueId())
-                .thenAccept(result -> handleResult(player, result, player.getName()));
+                .thenAccept(result -> Bukkit.getScheduler().runTask(plugin, () -> handleResult(player, result, player.getName())));
 
         return true;
     }
@@ -76,7 +81,7 @@ public class BalanceCommand implements CommandExecutor {
         }
 
         balanceService.executeOther(targetName)
-                .thenAccept(result -> handleResult(player, result, targetName));
+                .thenAccept(result -> Bukkit.getScheduler().runTask(plugin, () -> handleResult(player, result, targetName)));
 
         return true;
     }
