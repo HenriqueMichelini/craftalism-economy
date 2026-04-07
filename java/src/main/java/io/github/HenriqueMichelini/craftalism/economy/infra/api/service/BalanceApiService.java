@@ -294,7 +294,7 @@ public class BalanceApiService {
             return TransferFailureReason.RECEIVER_NOT_FOUND;
         }
 
-        if (body.contains("duplicate") || body.contains("idempot")) {
+        if (isExplicitDuplicateTransfer(body)) {
             return TransferFailureReason.DUPLICATE_REQUEST;
         }
 
@@ -303,6 +303,12 @@ public class BalanceApiService {
         }
 
         return TransferFailureReason.GENERIC_FAILURE;
+    }
+
+    private boolean isExplicitDuplicateTransfer(String body) {
+        return body.contains("duplicate_request") ||
+            body.contains("already processed recently") ||
+            body.contains("already been processed");
     }
 
     private ApiException mapStatusToException(int status, String body) {

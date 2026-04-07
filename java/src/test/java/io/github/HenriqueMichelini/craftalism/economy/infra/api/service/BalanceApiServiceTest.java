@@ -7,6 +7,8 @@ import io.github.HenriqueMichelini.craftalism.economy.infra.api.client.HttpClien
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceResponseDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceUpdateRequestDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.TransferApiException;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.TransferFailureReason;
 import io.github.HenriqueMichelini.craftalism.economy.infra.config.GsonFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -139,6 +141,50 @@ class BalanceApiServiceTest {
 
         assertInstanceOf(NotFoundException.class, exception.getCause());
         assertTrue(exception.getCause().getMessage().contains("status=404"));
+    }
+
+    @Test
+    @DisplayName("Should map explicit duplicate transfer response to duplicate request")
+    void shouldMapExplicitDuplicateTransferResponseToDuplicateRequest() {
+        HttpResponse<String> mockResponse = createMockResponse(
+                400,
+                "{\"code\":\"duplicate_request\",\"detail\":\"This payment was already processed recently.\"}"
+        );
+        when(httpClient.post(eq("/api/balances/transfer"), anyString()))
+                .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        ExecutionException exception = assertThrows(
+                ExecutionException.class,
+                () -> service.transfer(UUID.randomUUID(), UUID.randomUUID(), 10L).get()
+        );
+
+        assertInstanceOf(TransferApiException.class, exception.getCause());
+        assertEquals(
+                TransferFailureReason.DUPLICATE_REQUEST,
+                ((TransferApiException) exception.getCause()).getReason()
+        );
+    }
+
+    @Test
+    @DisplayName("Should not map incidental idempotency text to duplicate request")
+    void shouldNotMapIncidentalIdempotencyTextToDuplicateRequest() {
+        HttpResponse<String> mockResponse = createMockResponse(
+                400,
+                "{\"detail\":\"Idempotency validation failed because request payload was invalid.\"}"
+        );
+        when(httpClient.post(eq("/api/balances/transfer"), anyString()))
+                .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        ExecutionException exception = assertThrows(
+                ExecutionException.class,
+                () -> service.transfer(UUID.randomUUID(), UUID.randomUUID(), 10L).get()
+        );
+
+        assertInstanceOf(TransferApiException.class, exception.getCause());
+        assertEquals(
+                TransferFailureReason.INVALID_REQUEST,
+                ((TransferApiException) exception.getCause()).getReason()
+        );
     }
 
     @Test

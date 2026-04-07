@@ -67,4 +67,28 @@ class PaymentTransferServiceTest {
 
         assertEquals(PayStatus.NOT_ENOUGH_FUNDS, result.getStatus());
     }
+
+    @Test
+    void shouldMapDuplicateTransferExceptionToDuplicateStatus() {
+        PaymentTransferService service = new PaymentTransferService(balanceApi, false, logger);
+        when(balanceApi.transfer(payerUuid, receiverUuid, 100L)).thenReturn(
+            CompletableFuture.failedFuture(new TransferApiException(TransferFailureReason.DUPLICATE_REQUEST, "duplicate"))
+        );
+
+        PayExecutionResult result = service.execute(payerUuid, receiverUuid, 100L).join();
+
+        assertEquals(PayStatus.TRANSFER_DUPLICATE, result.getStatus());
+    }
+
+    @Test
+    void shouldMapInvalidTransferExceptionToInvalidRequestStatus() {
+        PaymentTransferService service = new PaymentTransferService(balanceApi, false, logger);
+        when(balanceApi.transfer(payerUuid, receiverUuid, 100L)).thenReturn(
+            CompletableFuture.failedFuture(new TransferApiException(TransferFailureReason.INVALID_REQUEST, "invalid"))
+        );
+
+        PayExecutionResult result = service.execute(payerUuid, receiverUuid, 100L).join();
+
+        assertEquals(PayStatus.TRANSFER_INVALID_REQUEST, result.getStatus());
+    }
 }
