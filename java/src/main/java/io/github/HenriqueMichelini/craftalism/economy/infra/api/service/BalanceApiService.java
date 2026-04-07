@@ -47,7 +47,7 @@ public class BalanceApiService {
                 }
 
                 return CompletableFuture.failedFuture(
-                    mapTransferStatusToException(status, body)
+                    mapStatusToException(status, body)
                 );
             });
     }

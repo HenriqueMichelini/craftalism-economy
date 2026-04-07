@@ -133,6 +133,26 @@ class BalanceApplicationServiceTest {
     }
 
     @Test
+    void loadBalanceOnJoin_ShouldCreateAndCacheBalance_WhenMissing() {
+        Long amount = 0L;
+        BalanceResponseDTO dto = new BalanceResponseDTO(playerUuid, amount);
+
+        when(api.getBalance(playerUuid)).thenReturn(
+            CompletableFuture.failedFuture(new NotFoundException("Not found"))
+        );
+        when(api.createBalance(playerUuid, DEFAULT_BALANCE)).thenReturn(
+            CompletableFuture.completedFuture(dto)
+        );
+
+        Balance result = service.loadBalanceOnJoin(playerUuid).join();
+
+        assertEquals(playerUuid, result.getUuid());
+        assertEquals(amount, result.getAmount());
+        verify(api).createBalance(playerUuid, DEFAULT_BALANCE);
+        verify(cache).save(result);
+    }
+
+    @Test
     void syncBalance_ShouldUpdateCache_WhenSynced() {
         Long amount = 4500000L;
         BalanceResponseDTO dto = new BalanceResponseDTO(playerUuid, amount);

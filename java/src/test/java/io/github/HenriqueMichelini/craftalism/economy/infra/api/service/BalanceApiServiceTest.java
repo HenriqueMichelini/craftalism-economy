@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.client.HttpClientService;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceResponseDTO;
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.dto.BalanceUpdateRequestDTO;
+import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.NotFoundException;
 import io.github.HenriqueMichelini.craftalism.economy.infra.config.GsonFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -119,6 +120,25 @@ class BalanceApiServiceTest {
 
         assertThrows(ExecutionException.class,
                 () -> service.getBalance(testUuid).get());
+    }
+
+    @Test
+    @DisplayName("Should map missing balance to not found on get balance")
+    void shouldMapMissingBalanceToNotFoundOnGetBalance() {
+        HttpResponse<String> mockResponse = createMockResponse(
+                404,
+                "{\"detail\":\"Balance not found for UUID: " + testUuid + "\"}"
+        );
+        when(httpClient.get("/api/balances/" + testUuid))
+                .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        ExecutionException exception = assertThrows(
+                ExecutionException.class,
+                () -> service.getBalance(testUuid).get()
+        );
+
+        assertInstanceOf(NotFoundException.class, exception.getCause());
+        assertTrue(exception.getCause().getMessage().contains("status=404"));
     }
 
     @Test
@@ -409,8 +429,13 @@ class BalanceApiServiceTest {
 
     @SuppressWarnings("unchecked")
     private HttpResponse<String> createMockResponse(String body) {
+        return createMockResponse(200, body);
+    }
+
+    @SuppressWarnings("unchecked")
+    private HttpResponse<String> createMockResponse(int status, String body) {
         HttpResponse<String> response = mock(HttpResponse.class);
-        when(response.statusCode()).thenReturn(200);
+        when(response.statusCode()).thenReturn(status);
         when(response.body()).thenReturn(body);
         return response;
     }
