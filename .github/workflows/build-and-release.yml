@@ -5,13 +5,22 @@ on:
     tags:
       - "v*.*.*"
   workflow_dispatch:
+    inputs:
+      version:
+        description: Release version without the leading v
+        required: true
+        type: string
 
 jobs:
-  build:
+  verify-release-commit:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write # Needed to create releases
+      contents: read
+
+    defaults:
+      run:
+        working-directory: java
 
     steps:
       - name: Checkout code
@@ -24,22 +33,48 @@ jobs:
           distribution: "temurin"
           cache: "gradle"
 
-      - name: Make gradlew executable
-        working-directory: java
-        run: chmod +x gradlew
+      - name: Verify Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
 
       - name: Build with Gradle
-        working-directory: java
-        run: ./gradlew build --no-daemon
+        run: ./gradlew --no-daemon clean build
 
-      - name: Get version from tag
+      - name: Upload verified plugin artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-plugin-jar
+          path: java/build/libs/*.jar
+          retention-days: 7
+
+  release:
+    needs: verify-release-commit
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # Needed to create releases
+
+    steps:
+      - name: Resolve release version
         id: version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download verified plugin artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: verified-plugin-jar
+          path: verified-plugin
 
       - name: Prepare release artifacts
+        shell: bash
         run: |
           mkdir -p release
-          cp java/build/libs/*.jar release/craftalism-economy-${{ steps.version.outputs.version }}.jar
+          cp verified-plugin/*.jar release/craftalism-economy-${{ steps.version.outputs.version }}.jar
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
