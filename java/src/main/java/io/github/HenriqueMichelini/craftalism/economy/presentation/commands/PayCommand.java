@@ -84,7 +84,12 @@ public class PayCommand implements CommandExecutor {
         try {
             BigDecimal displayAmount = new BigDecimal(amountStr);
             amount = formatter.fromDisplayValue(displayAmount);
-        } catch (NumberFormatException e) {
+        } catch (RuntimeException e) {
+            messages.sendPayInvalidAmount(player);
+            return true;
+        }
+
+        if (amount <= 0) {
             messages.sendPayInvalidAmount(player);
             return true;
         }

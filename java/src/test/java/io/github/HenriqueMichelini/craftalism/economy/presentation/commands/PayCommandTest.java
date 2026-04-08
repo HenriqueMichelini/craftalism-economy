@@ -118,6 +118,30 @@ class PayCommandTest {
     }
 
     @Test
+    @DisplayName("should reject amount when conversion fails")
+    void shouldRejectAmountWhenConversionFails() {
+        when(formatter.fromDisplayValue(any(BigDecimal.class))).thenThrow(new ArithmeticException("overflow"));
+
+        boolean result = payCommand.onCommand(player, command, "pay", new String[]{"Target", "10"});
+
+        assertTrue(result);
+        verify(messages).sendPayInvalidAmount(player);
+        verifyNoInteractions(payService);
+    }
+
+    @Test
+    @DisplayName("should reject amount when converted amount is non positive")
+    void shouldRejectAmountWhenConvertedAmountIsNonPositive() {
+        when(formatter.fromDisplayValue(any(BigDecimal.class))).thenReturn(0L);
+
+        boolean result = payCommand.onCommand(player, command, "pay", new String[]{"Target", "10"});
+
+        assertTrue(result);
+        verify(messages).sendPayInvalidAmount(player);
+        verifyNoInteractions(payService);
+    }
+
+    @Test
     @DisplayName("should reject self payment")
     void shouldRejectSelfPayment() {
         boolean result = payCommand.onCommand(player, command, "pay", new String[]{"Sender", "1"});

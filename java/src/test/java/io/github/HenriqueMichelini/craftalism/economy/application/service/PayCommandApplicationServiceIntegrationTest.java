@@ -17,6 +17,7 @@ import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.BalanceA
 import io.github.HenriqueMichelini.craftalism.economy.infra.api.service.PlayerApiService;
 import io.github.HenriqueMichelini.craftalism.economy.infra.config.GsonFactory;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -48,6 +49,17 @@ class PayCommandApplicationServiceIntegrationTest {
         assertEquals(PayStatus.SUCCESS, result.getStatus());
         assertEquals(1, api.transferCalls);
         assertEquals(0, api.withdrawCalls + api.depositCalls);
+    }
+
+    @Test
+    void shouldSerializeFromAndToPlayerUuidFieldsForTransfer() throws Exception {
+        TestApiStub api = startServer(TransferBehavior.SUCCESS, true);
+        PayCommandApplicationService service = buildService(api.baseUrl(), false);
+
+        PayExecutionResult result = service.execute(api.payerUuid, "payer", "receiver", 10L).get();
+
+        assertEquals(PayStatus.SUCCESS, result.getStatus());
+        assertEquals(1, api.transferCalls);
     }
 
     @Test
@@ -196,9 +208,31 @@ class PayCommandApplicationServiceIntegrationTest {
 
         private void handleTransfer(HttpExchange exchange) throws IOException {
             transferCalls++;
+            String body = readRequestBody(exchange);
+            String idempotencyKey = exchange.getRequestHeaders().getFirst("Idempotency-Key");
+
+            if (
+                !body.contains("\"fromPlayerUuid\":\"" + payerUuid + "\"") ||
+                !body.contains("\"toPlayerUuid\":\"" + receiverUuid + "\"") ||
+                body.contains("senderUuid") ||
+                body.contains("receiverUuid")
+            ) {
+                writeJson(exchange, 400, "{\"error\":\"invalid_transfer_payload\"}");
+                return;
+            }
+
+            if (idempotencyKey == null || idempotencyKey.isBlank()) {
+                writeJson(exchange, 400, "{\"error\":\"missing_idempotency_key\"}");
+                return;
+            }
+
             switch (transferBehavior) {
                 case SUCCESS -> writeJson(exchange, 204, "");
-                case INSUFFICIENT_FUNDS -> writeJson(exchange, 400, "{\"error\":\"insufficient_funds\"}");
+                case INSUFFICIENT_FUNDS -> writeJson(
+                    exchange,
+                    422,
+                    "{\"type\":\"https://api.craftalism.com/errors/business-rule\",\"title\":\"Unprocessable Entity\",\"status\":422,\"detail\":\"Insufficient funds for uuid: " + payerUuid + " | amount: 20\"}"
+                );
                 case SERVER_ERROR -> writeJson(exchange, 503, "{\"error\":\"temporarily_unavailable\"}");
                 case ENDPOINT_UNAVAILABLE -> writeJson(exchange, 404, "{\"error\":\"route not found\"}");
             }
@@ -232,6 +266,12 @@ class PayCommandApplicationServiceIntegrationTest {
             exchange.sendResponseHeaders(status, bytes.length);
             exchange.getResponseBody().write(bytes);
             exchange.close();
+        }
+
+        private String readRequestBody(HttpExchange exchange) throws IOException {
+            try (InputStream inputStream = exchange.getRequestBody()) {
+                return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            }
         }
     }
 }

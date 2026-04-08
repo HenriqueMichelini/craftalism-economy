@@ -12,6 +12,7 @@ import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.*;
 import io.github.HenriqueMichelini.craftalism.economy.infra.config.GsonFactory;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -165,8 +166,13 @@ public class BalanceApiService {
 
     public CompletableFuture<Void> transfer(UUID from, UUID to, long amount) {
         TransferRequestDTO dto = new TransferRequestDTO(from, to, amount);
+        String idempotencyKey = buildTransferIdempotencyKey(from, to, amount);
         return http
-            .post("/api/balances/transfer", gson.toJson(dto))
+            .post(
+                "/api/balances/transfer",
+                gson.toJson(dto),
+                Map.of("Idempotency-Key", idempotencyKey)
+            )
             .thenCompose(resp -> {
                 int status = resp.statusCode();
                 String body = resp.body();
@@ -179,6 +185,10 @@ public class BalanceApiService {
                     mapTransferStatusToException(status, body)
                 );
             });
+    }
+
+    private String buildTransferIdempotencyKey(UUID from, UUID to, long amount) {
+        return from + ":" + to + ":" + amount;
     }
 
     public CompletableFuture<List<BalanceResponseDTO>> getTopBalances(
@@ -262,10 +272,10 @@ public class BalanceApiService {
     private ApiException mapTransferStatusToException(int status, String body) {
         String normalizedBody = body == null ? "" : body.toLowerCase();
 
-        if (status == 400) {
+        if (status == 400 || status == 422) {
             return new TransferApiException(
                 inferTransferFailureReason(normalizedBody),
-                "Transfer validation failed (status=400). Body: " + safePreview(body)
+                "Transfer validation failed (status=" + status + "). Body: " + safePreview(body)
             );
         }
 

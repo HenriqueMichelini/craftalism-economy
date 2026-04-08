@@ -20,6 +20,7 @@ import org.mockito.MockitoAnnotations;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -150,7 +151,7 @@ class BalanceApiServiceTest {
                 400,
                 "{\"code\":\"duplicate_request\",\"detail\":\"This payment was already processed recently.\"}"
         );
-        when(httpClient.post(eq("/api/balances/transfer"), anyString()))
+        when(httpClient.post(eq("/api/balances/transfer"), anyString(), anyMap()))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         ExecutionException exception = assertThrows(
@@ -172,7 +173,7 @@ class BalanceApiServiceTest {
                 400,
                 "{\"detail\":\"Idempotency validation failed because request payload was invalid.\"}"
         );
-        when(httpClient.post(eq("/api/balances/transfer"), anyString()))
+        when(httpClient.post(eq("/api/balances/transfer"), anyString(), anyMap()))
                 .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
         ExecutionException exception = assertThrows(
@@ -184,6 +185,58 @@ class BalanceApiServiceTest {
         assertEquals(
                 TransferFailureReason.INVALID_REQUEST,
                 ((TransferApiException) exception.getCause()).getReason()
+        );
+    }
+
+    @Test
+    @DisplayName("Should map insufficient funds from unprocessable transfer response")
+    void shouldMapInsufficientFundsFromUnprocessableTransferResponse() {
+        HttpResponse<String> mockResponse = createMockResponse(
+                422,
+                "{\"type\":\"https://api.craftalism.com/errors/business-rule\",\"title\":\"Unprocessable Entity\",\"status\":422,\"detail\":\"Insufficient funds for uuid: test | amount: 100\"}"
+        );
+        when(httpClient.post(eq("/api/balances/transfer"), anyString(), anyMap()))
+                .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        ExecutionException exception = assertThrows(
+                ExecutionException.class,
+                () -> service.transfer(UUID.randomUUID(), UUID.randomUUID(), 100L).get()
+        );
+
+        assertInstanceOf(TransferApiException.class, exception.getCause());
+        assertEquals(
+                TransferFailureReason.INSUFFICIENT_FUNDS,
+                ((TransferApiException) exception.getCause()).getReason()
+        );
+    }
+
+    @Test
+    @DisplayName("Should serialize transfer request using from and to player UUID fields")
+    void shouldSerializeTransferRequestUsingFromAndToPlayerUuidFields() throws ExecutionException, InterruptedException {
+        UUID fromPlayerUuid = UUID.randomUUID();
+        UUID toPlayerUuid = UUID.randomUUID();
+        String[] capturedJson = new String[1];
+        Map<String, String>[] capturedHeaders = new Map[1];
+
+        HttpResponse<String> mockResponse = createMockResponse(204, "");
+        when(httpClient.post(eq("/api/balances/transfer"), anyString(), anyMap()))
+                .thenAnswer(invocation -> {
+                    capturedJson[0] = invocation.getArgument(1);
+                    capturedHeaders[0] = invocation.getArgument(2);
+                    return CompletableFuture.completedFuture(mockResponse);
+                });
+
+        service.transfer(fromPlayerUuid, toPlayerUuid, 10L).get();
+
+        assertNotNull(capturedJson[0]);
+        assertTrue(capturedJson[0].contains("\"fromPlayerUuid\":\"" + fromPlayerUuid + "\""));
+        assertTrue(capturedJson[0].contains("\"toPlayerUuid\":\"" + toPlayerUuid + "\""));
+        assertFalse(capturedJson[0].contains("senderUuid"));
+        assertFalse(capturedJson[0].contains("receiverUuid"));
+        assertNotNull(capturedHeaders[0]);
+        assertEquals(
+                fromPlayerUuid + ":" + toPlayerUuid + ":10",
+                capturedHeaders[0].get("Idempotency-Key")
         );
     }
 

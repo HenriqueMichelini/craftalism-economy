@@ -3,6 +3,7 @@ package io.github.HenriqueMichelini.craftalism.economy.presentation.listeners;
 import io.github.HenriqueMichelini.craftalism.economy.application.service.BalanceApplicationService;
 import io.github.HenriqueMichelini.craftalism.economy.application.service.PlayerApplicationService;
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,12 +31,29 @@ public class OnJoin implements Listener {
 
         playerService
             .loadPlayerOnJoin(uuid, name)
-            .thenCompose(p -> balanceService.loadBalanceOnJoin(uuid)) // 🔥 FIX: chain
+            .thenCompose(p -> balanceService.loadBalanceOnJoin(uuid))
             .exceptionally(ex -> {
+                Throwable cause = unwrap(ex);
                 System.err.println(
-                    "Erro ao inicializar player " + uuid + ": " + ex
+                    "Erro ao inicializar player " +
+                    uuid +
+                    ": " +
+                    cause.getClass().getSimpleName() +
+                    ": " +
+                    cause.getMessage()
                 );
                 return null;
             });
+    }
+
+    private Throwable unwrap(Throwable ex) {
+        Throwable current = ex;
+        while (
+            current.getCause() != null &&
+            current instanceof CompletionException
+        ) {
+            current = current.getCause();
+        }
+        return current;
     }
 }

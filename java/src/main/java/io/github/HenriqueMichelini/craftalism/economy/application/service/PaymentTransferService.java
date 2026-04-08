@@ -28,6 +28,14 @@ public class PaymentTransferService {
         UUID receiverUuid,
         long amount
     ) {
+        logInfo(
+            "Starting transfer: sender=" +
+            payerUuid +
+            ", receiver=" +
+            receiverUuid +
+            ", amount=" +
+            amount
+        );
         return balanceApi
             .transfer(payerUuid, receiverUuid, amount)
             .thenApply(v -> PayExecutionResult.success(receiverUuid))
@@ -149,7 +157,13 @@ public class PaymentTransferService {
 
     private void logError(String message, Throwable ex) {
         if (logger != null) {
-            logger.severe(message + ": " + ex.getMessage());
+            logger.severe(
+                message +
+                ": " +
+                ex.getClass().getSimpleName() +
+                ": " +
+                ex.getMessage()
+            );
         }
     }
 }

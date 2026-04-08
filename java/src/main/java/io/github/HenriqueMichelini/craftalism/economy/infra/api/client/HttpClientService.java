@@ -4,6 +4,7 @@ import io.github.HenriqueMichelini.craftalism.economy.infra.api.exceptions.ApiTi
 import java.net.URI;
 import java.net.http.*;
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
@@ -38,15 +39,25 @@ public class HttpClientService {
     private CompletableFuture<HttpRequest.Builder> authenticatedRequest(
         String path
     ) {
+        return authenticatedRequest(path, Map.of());
+    }
+
+    private CompletableFuture<HttpRequest.Builder> authenticatedRequest(
+        String path,
+        Map<String, String> headers
+    ) {
         return tokenService
             .getToken()
-            .thenApply(token ->
-                HttpRequest.newBuilder()
+            .thenApply(token -> {
+                HttpRequest.Builder builder = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + path))
                     .timeout(Duration.ofSeconds(requestTimeoutSeconds))
                     .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer " + token)
-            );
+                    .header("Authorization", "Bearer " + token);
+
+                headers.forEach(builder::header);
+                return builder;
+            });
     }
 
     public CompletableFuture<HttpResponse<String>> get(String path) {
@@ -59,7 +70,15 @@ public class HttpClientService {
         String path,
         String body
     ) {
-        return authenticatedRequest(path).thenCompose(builder ->
+        return post(path, body, Map.of());
+    }
+
+    public CompletableFuture<HttpResponse<String>> post(
+        String path,
+        String body,
+        Map<String, String> headers
+    ) {
+        return authenticatedRequest(path, headers).thenCompose(builder ->
             send(
                 builder.POST(HttpRequest.BodyPublishers.ofString(body)).build(),
                 path
@@ -97,6 +116,18 @@ public class HttpClientService {
                                 safeBodyLength(resp.body()) +
                                 " chars)"
                         );
+                        if (resp.statusCode() >= 400) {
+                            LOGGER.warning(() ->
+                                "[HttpClient] <- " +
+                                    resp.statusCode() +
+                                    " " +
+                                    request.method() +
+                                    " " +
+                                    request.uri() +
+                                    " Body: " +
+                                    safePreview(resp.body())
+                            );
+                        }
                     } else {
                         LOGGER.warning("[HttpClient] <- ERROR : " + err);
                     }
@@ -107,6 +138,11 @@ public class HttpClientService {
     private int safeBodyLength(String body) {
         if (body == null) return 0;
         return body.length();
+    }
+
+    private String safePreview(String body) {
+        if (body == null) return "<null>";
+        return body.length() > 500 ? body.substring(0, 500) + "...(truncated)" : body;
     }
 
     private <T> CompletableFuture<T> withTimeoutHandling(
