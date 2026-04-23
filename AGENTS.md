@@ -1,110 +1,90 @@
-# Craftalism Codex Agent Instructions
+# AGENTS.md
 
-## Execution Mode
-- Default mode: read-only analysis unless explicitly instructed to implement
+## Purpose
 
-## Role
-You are a senior software engineer working inside a single Craftalism repository.
+This repository owns the Minecraft plugin client, including command behavior, async orchestration, fallback handling, and player-facing interaction with the Craftalism system.
 
-## Core Principles
-- Work strictly within this repository
-- Respect repository ownership boundaries
-- Do not implement responsibilities owned by other repositories
-- Treat shared contracts and standards as the source of truth
-- Do not redefine cross-repo contracts locally
-- Be audit-driven, not assumption-driven
-- Prefer minimal, targeted, production-safe changes
+---
 
-## Governance Precedence
-When conflicts arise, follow this order:
-1. Shared contracts (`docs/contracts/`)
-2. Shared standards (`docs/standards/`)
-3. Governance docs (`docs/governance-precedence.md`, `docs/system-summary.md`)
-4. Local repository docs
+## Core Rules
 
-## Required Reading Order
-When performing audit or implementation tasks:
+- Work only within this repository's owned responsibilities
+- Do not redefine shared contracts or cross-repo behavior
+- Do not perform unrelated refactors
+- Prefer the smallest correct change
+- Maintain senior-level quality in code, design, and security
+- Improve performance only if correctness and stability are preserved
 
-1. Governance layer:
-   - `docs/governance-precedence.md`
-   - `docs/system-summary.md`
-   - `docs/contracts/`
-   - `docs/standards/`
-   - `docs/audit/2026-04-04-ecosystem-technical-audit.md`
+---
 
-2. Local repository:
-   - `docs/repo-contract-map.md`
-   - `docs/repo-requirement-pack.md`
+## Ownership Requirement
 
-3. Then:
-   - Source code
-   - Config
-   - Tests
-   - CI/CD workflows
-   - README
+Before acting, state:
 
-## Audit Philosophy
-- Do not assume the audit document is correct
-- Validate everything against the actual codebase
-- Similar behavior is not enough — must match contract intent
-- Documentation alone is not compliance
-- Partial implementations must be flagged
+- whether this repository owns or consumes the behavior
 
-## Classification Model
-Every requirement must be classified as:
-- already compliant
-- partially compliant
-- missing
-- incorrectly implemented
-- out of scope
+Do not proceed without establishing ownership.
 
-## Implementation Rules
-- Only fix confirmed issues
-- Do not refactor without necessity
-- Do not introduce architectural changes unless required
-- Keep changes minimal and consistent with the repo
-- Update tests/docs only if required by the fix
+---
 
-## Out-of-Scope Handling
-- If something belongs to another repository → mark as out of scope
-- Do not implement cross-repo responsibilities
-- Do not “fix the ecosystem” from within a single repo
+## Boundary Rule
 
-## Validation
-When possible:
-- run tests
-- run build
-- run lint/typecheck
+If an issue originates outside this repository:
 
-If not possible:
-- explain why
+- stop at the boundary
+- identify the owning repository
+- suggest what should be changed there
 
-## Output Standards
+Do not implement cross-repo changes locally.
 
-### Problems
-- Only confirmed issues
-- No out-of-scope items listed as defects
+---
 
-### Changes
-- Only actual changes made
-- Must map directly to confirmed issues
+## Workflow
 
-### Improvements
-- Optional only
-- Never mixed with required fixes
+Use:
 
-## Quality Bar
-- Conservative
-- Precise
-- Contract-aware
-- Repo-scoped
-- Production-oriented
+triage → audit → implement → reverify
 
-## Bug Triage Rule
-When a bug report includes logs, cross-service calls, or unclear ownership, do not start with audit or implementation.
-First perform triage to identify BEFORE any audit or implementation:
-- observable symptom
-- failing boundary
-- probable owning repository
-- whether the issue is local, integration, contract, or configuration-related
-Only then proceed to repo-specific audit or implementation.
+Or:
+
+audit → implement → reverify
+
+### Audit
+- read-only
+- identify confirmed issues only
+
+### Implement
+- implement only confirmed repo-local issues
+- validate changes when possible
+- suggest commit message(s)
+
+### Reverify
+- read-only
+- confirm fixes and check regressions
+
+---
+
+## Source of Truth
+
+When needed, consult:
+
+- repo-local docs (, )
+- Craftalism root docs (contracts, standards, governance)
+
+If conflicts exist, follow governance precedence.
+
+---
+
+## Commit Requirement
+
+After implementation, suggest commit message(s) that:
+
+- reflect only the implemented change
+- are specific and scoped
+- do not mix unrelated work
+
+---
+
+## Additional Guidance
+
+Follow the Codex Usage Checklist when applicable.
