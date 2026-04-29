@@ -6,6 +6,7 @@ import java.util.Locale;
 public final class ConfigLoader {
 
     private final CraftalismEconomy plugin;
+    private final EnvironmentI environment;
     private final ConnectionConfig connectionConfig;
 
     private static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 5;
@@ -17,6 +18,7 @@ public final class ConfigLoader {
 
     ConfigLoader(CraftalismEconomy plugin, EnvironmentI environment) {
         this.plugin = plugin;
+        this.environment = environment;
         this.connectionConfig = new ConnectionConfig(plugin);
     }
 
@@ -68,7 +70,7 @@ public final class ConfigLoader {
     }
 
     public String baseUrl() {
-        String envUrl = System.getenv("CRAFTALISM_API_URL");
+        String envUrl = environment.getenv("CRAFTALISM_API_URL");
         if (envUrl != null && !envUrl.isBlank()) {
             return normalizeBaseUrl(envUrl, "CRAFTALISM_API_URL");
         }
@@ -79,7 +81,7 @@ public final class ConfigLoader {
     }
 
     public String authServerUrl() {
-        String env = System.getenv("AUTH_ISSUER_URI");
+        String env = environment.getenv("AUTH_ISSUER_URI");
         if (env != null && !env.isBlank()) {
             return normalizeBaseUrl(env, "AUTH_ISSUER_URI");
         }
@@ -90,7 +92,7 @@ public final class ConfigLoader {
     }
 
     public String tokenPath() {
-        String env = System.getenv("AUTH_TOKEN_PATH");
+        String env = environment.getenv("AUTH_TOKEN_PATH");
         if (env != null && !env.isBlank()) {
             return normalizeTokenPath(env, "AUTH_TOKEN_PATH");
         }
@@ -101,15 +103,15 @@ public final class ConfigLoader {
     }
 
     public String clientId() {
-        String env = System.getenv("MINECRAFT_CLIENT_ID");
+        String env = environment.getenv("MINECRAFT_CLIENT_ID");
         if (env != null && !env.isBlank()) return env;
         return connectionConfig.getClientId();
     }
 
     public String clientSecret() {
-        String env = System.getenv("MINECRAFT_CLIENT_SECRET");
+        String env = environment.getenv("MINECRAFT_CLIENT_SECRET");
         if (env != null && !env.isBlank()) return env;
-        env = System.getenv("CRAFTALISM_API_KEY");
+        env = environment.getenv("CRAFTALISM_API_KEY");
         if (env != null && !env.isBlank()) return env;
         String configured = connectionConfig.getClientSecret();
         if (configured == null || configured.isBlank()) {
@@ -124,7 +126,7 @@ public final class ConfigLoader {
     }
 
     public String oauthScopes() {
-        String env = System.getenv("MINECRAFT_CLIENT_SCOPES");
+        String env = environment.getenv("MINECRAFT_CLIENT_SCOPES");
         if (env != null && !env.isBlank()) return env;
         return connectionConfig.getScopes();
     }
