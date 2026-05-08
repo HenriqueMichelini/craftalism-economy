@@ -127,7 +127,7 @@ All player-facing message templates and command output prefixes.
 
 ```bash
 cd java
-./gradlew clean build
+./gradlew build
 ```
 
 The plugin JAR is output to `java/build/libs/`.
