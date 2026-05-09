@@ -99,11 +99,9 @@ class CurrencyFormatterTest {
     }
 
     @Test
-    @DisplayName("Should format amounts with 4 decimal places")
-    void shouldFormatAmountsWithFourDecimals() {
-        String result = formatter.formatCurrency(12345L);
-        assertTrue(result.startsWith("$"));
-        assertTrue(result.contains("1.234"));
+    @DisplayName("Should format amounts with two decimal places")
+    void shouldFormatAmountsWithTwoDecimals() {
+        assertEquals("$1.23", formatter.formatCurrency(12345L));
     }
 
     @Test
@@ -138,11 +136,10 @@ class CurrencyFormatterTest {
     }
 
     @Test
-    @DisplayName("Should format BigDecimal with many decimal places")
-    void shouldFormatBigDecimalWithManyDecimals() {
-        String result = formatter.formatCurrency(new BigDecimal("10.123456789"));
-        assertTrue(result.startsWith("$"));
-        assertTrue(result.contains("10.1234") || result.contains("10.123"));
+    @DisplayName("Should format BigDecimal with two decimal places")
+    void shouldFormatBigDecimalWithTwoDecimals() {
+        assertEquals("$10.12", formatter.formatCurrency(new BigDecimal("10.123456789")));
+        assertEquals("$10.13", formatter.formatCurrency(new BigDecimal("10.125")));
     }
 
     @Test

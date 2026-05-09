@@ -63,7 +63,7 @@ public class CurrencyFormatter {
 
         NumberFormat nf = NumberFormat.getInstance(locale);
         nf.setMinimumFractionDigits(2);
-        nf.setMaximumFractionDigits(4);
+        nf.setMaximumFractionDigits(2);
         nf.setGroupingUsed(true);
         try {
             nf.setRoundingMode(RoundingMode.HALF_UP);
